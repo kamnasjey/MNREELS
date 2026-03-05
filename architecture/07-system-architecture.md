@@ -25,8 +25,8 @@
    │ PostgreSQL  │  │ Cloudflare  │ │ QPay /      │
    │ (Supabase)  │  │ R2 + Stream │ │ SocialPay   │
    │             │  │             │ │             │
-   │ - Users     │  │ - Video     │ │ - Coin      │
-   │ - Coins     │  │   storage   │ │   худалдан  │
+   │ - Users     │  │ - Video     │ │ - Тасалбар      │
+   │ - Тасалбарs     │  │   storage   │ │   худалдан  │
    │ - Videos    │  │ - HLS       │ │   авалт     │
    │ - Follows   │  │   streaming │ │ - Payout    │
    │ - Comments  │  │ - Transcode │ │             │
@@ -57,10 +57,10 @@ Auto transcode (480p, 720p, 1080p)
     └── 2 цаг ──► Автомат нийтлэх
 ```
 
-## Coin худалдан авах урсгал
+## Тасалбар худалдан авах урсгал
 
 ```
-Хэрэглэгч coin багц сонгоно
+Хэрэглэгч тасалбар багц сонгоно
     │
     ▼
 QPay/SocialPay invoice үүсгэнэ
@@ -72,7 +72,7 @@ QPay/SocialPay invoice үүсгэнэ
 Webhook callback ирнэ
     │
     ▼
-Хэрэглэгчийн coin balance нэмэгдэнэ
+Хэрэглэгчийн тасалбар balance нэмэгдэнэ
     │
     ▼
 Transaction бүртгэл хадгална
@@ -94,12 +94,12 @@ Transaction бүртгэл хадгална
     Үгүй
     │
     ▼
-Coin хүрэлцэх үү? ──► Үгүй ──► "Coin цэнэглэх" prompt
+Тасалбар хүрэлцэх үү? ──► Үгүй ──► "Тасалбар цэнэглэх" prompt
     │
     Тийм
     │
     ▼
-Coin хасна + 48 цагийн эрх олгоно
+Тасалбар хасна + 48 цагийн эрх олгоно
     │
     ▼
 Cloudflare Stream HLS URL-аар тоглуулна

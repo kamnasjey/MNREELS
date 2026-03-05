@@ -64,13 +64,13 @@ International per-episode pricing ranges from $0.10 (text-based) to $1.00 (premi
 
 | Metric | MNT | USD (approx.) |
 |--------|-----|---------------|
-| **Average monthly salary** | 2,480,000 - 2,714,000 MNT | $720-$787 |
+| **Average monthly salary** | ~1,400,000 MNT | ~$406 |
 | **Minimum wage** (Jan 2025) | 792,000 MNT | $230 |
-| **Mining sector salary** (highest) | ~5,000,000 MNT | $1,450 |
+| **Mining sector salary** (highest) | ~3,000,000 - 5,000,000 MNT | $870-$1,450 |
 | **Arts/entertainment salary** (lowest) | ~615,000 MNT | $175 |
-| **Median young urban worker** (estimated) | ~1,500,000 - 2,000,000 MNT | $435-$580 |
+| **Young urban worker (18-35)** | ~1,000,000 - 1,400,000 MNT | $290-$406 |
 
-MNREELS' target demographic is likely **young urban Mongolians (18-35)** in Ulaanbaatar, who earn closer to 1.5-2 million MNT per month.
+MNREELS' target demographic is **young Mongolians (18-35)**, mostly in Ulaanbaatar, who earn around 1,000,000-1,400,000 MNT per month. This is significantly lower than US/Korean audiences, so pricing must be very affordable.
 
 ### 2.2 Everyday Price Anchors in Ulaanbaatar
 
@@ -87,8 +87,8 @@ MNREELS' target demographic is likely **young urban Mongolians (18-35)** in Ulaa
 
 ### 2.3 Entertainment Spending Estimate
 - A typical young Mongolian might allocate **5-10% of monthly income** to entertainment
-- That translates to roughly **75,000 - 200,000 MNT/month** ($22-$58) for all entertainment
-- Digital content would be a **subset** of this: realistically **20,000 - 50,000 MNT/month** ($6-$15)
+- Average salary 1,400,000₮-ээс: **70,000 - 140,000 MNT/month** ($20-$41) for all entertainment
+- Digital content would be a **subset** of this: realistically **15,000 - 40,000 MNT/month** ($4-$12)
 
 ### 2.4 "Impulse Buy" Threshold
 Based on the price anchors:
@@ -176,149 +176,145 @@ The most successful platforms (WEBTOON, TikTok, Webnovel) all use bonus coins ra
 
 ## 4. Recommended Pricing for MNREELS
 
-### 4.1 Coin-to-MNT Ratio
+> **ТЭМДЭГЛЭЛ:** "Coin" биш **"Тасалбар"** гэж нэрлэнэ. Хуулийн хувьд "виртуал валют" гэх
+> ангилалд орохгүй, кино театрын тасалбартай адил ойлголт, Монгол хэрэглэгчдэд танил.
 
-**Recommended: 1 coin = 100 MNT**
+### 4.1 Тасалбар-MNT харьцаа
 
-**Rationale:**
-- Clean, easy math for users (no need for calculators)
-- 100 MNT per coin means watching a short video costs 300-500 MNT (3-5 coins), which is firmly in impulse-buy territory
-- Comparable to international standards when adjusted for purchasing power parity:
-  - ReelShort charges ~$0.50-$1.00/episode in the US (where average income is ~$5,000/month)
-  - For Mongolia (avg. income ~$720/month), the PPP-adjusted equivalent would be ~$0.07-$0.14/episode
-  - At 1 coin = 100 MNT: a 5-coin episode = 500 MNT ($0.14) -- right at the PPP-adjusted sweet spot
+**Зөвлөмж: 1 тасалбар = 50 MNT**
+
+**Яагаад 50₮ вэ:**
+- Анги бүр 2 тасалбар = 100₮ — **автобусны билетээс ч хямд**, бүрэн impulse buy
+- 30 ангитай бүтэн цуврал = 60 тасалбар = **3,000₮** — нэг кофены үнээс бага
+- PPP тооцоо:
+  - ReelShort: $0.50-$1.00/анги (АНУ, дундаж $5,000/сар)
+  - Монгол (дундаж ~$406/сар): PPP-adjusted = ~$0.04-$0.08/анги
+  - 1 тасалбар = 50₮ → 2 тасалбар = 100₮ ($0.029) — PPP sweet spot-оос ч доогуур, маш хүртээмжтэй
+- Тасалбарын тоо том харагдана (100, 200, 500) — сэтгэл зүйд "их юмтай" мэдрэмж
 
 | Metric | Value |
 |--------|-------|
-| **1 Coin** | 100 MNT (~$0.029 USD) |
-| **Cost of cheapest video (3 coins)** | 300 MNT (~$0.087) |
-| **Cost of most expensive video (8 coins)** | 800 MNT (~$0.23) |
+| **1 Тасалбар** | 50 MNT (~$0.015 USD) |
+| **Нэг анги (2 тасалбар)** | 100 MNT (~$0.029) |
+| **Бүтэн цуврал 30 анги (60 тасалбар)** | 3,000 MNT (~$0.87) |
 
-### 4.2 Coin Package Tiers
+### 4.2 Тасалбар багц
 
-| Package | Coins | Base Price (MNT) | Bonus Coins | Total Coins | Effective Price/Coin | Savings |
-|---------|-------|-----------------|-------------|-------------|---------------------|---------|
-| **Turshilt** (Trial) | 30 | 3,000 MNT (~$0.87) | 0 | 30 | 100 MNT | -- |
-| **Jijig** (Small) | 60 | 5,500 MNT (~$1.59) | 5 bonus | 65 | 84.6 MNT | ~8% |
-| **Dund** (Medium) | 120 | 10,000 MNT (~$2.90) | 15 bonus | 135 | 74.1 MNT | ~13% |
-| **Tom** (Large) | 250 | 20,000 MNT (~$5.80) | 40 bonus | 290 | 69.0 MNT | ~18% |
-| **Super** | 500 | 35,000 MNT (~$10.14) | 100 bonus | 600 | 58.3 MNT | ~25% |
+| Багц | Тасалбар | Үнэ (MNT) | Бонус | Нийт | Үнэ/тасалбар | Хэмнэлт |
+|------|----------|-----------|-------|------|-------------|---------|
+| **Турших** (Trial) | 20 | 1,000₮ (~$0.29) | 0 | 20 | 50₮ | -- |
+| **Жижиг** (Small) | 60 | 2,500₮ (~$0.72) | 5 бонус | 65 | 38.5₮ | ~15% |
+| **Дунд** (Medium) | 120 | 5,000₮ (~$1.45) | 15 бонус | 135 | 37₮ | ~18% |
+| **Том** (Large) | 250 | 10,000₮ (~$2.90) | 40 бонус | 290 | 34.5₮ | ~25% |
+| **Супер** | 500 | 18,000₮ (~$5.22) | 100 бонус | 600 | 30₮ | ~33% |
 
-**Design notes:**
-- **Trial pack (3,000 MNT)**: Less than a coffee. Gets users past the first-purchase barrier. Enough for 6-10 short episodes to get hooked.
-- **Small pack (5,500 MNT)**: A casual viewer's weekly supply. The "default" recommendation for new users.
-- **Medium pack (10,000 MNT)**: The **"BEST VALUE"** badge target. A round number that Mongolians are comfortable spending via QPay. Enough for ~27-45 episodes.
-- **Large pack (20,000 MNT)**: For regular viewers. Comparable to a movie ticket -- but gets you 50+ episodes instead of one movie.
-- **Super pack (35,000 MNT)**: For power users and superfans. The per-coin cost is nearly half the base rate, rewarding commitment.
+**Тайлбар:**
+- **Турших (1,000₮)**: Автобусны 2 билетийн үнэ. Эхний удаа туршихад хамгийн бага бариер. 10 анги үзнэ.
+- **Жижиг (2,500₮)**: Нэг бүтэн цуврал үзэхэд хүрнэ. Шинэ хэрэглэгчийн "default" сонголт.
+- **Дунд (5,000₮)**: **"ХАМГИЙН АШИГТАЙ"** badge. 2 бүтэн цуврал + илүүдэл тасалбар. QPay-д тохиромжтой дугуй тоо.
+- **Том (10,000₮)**: Кино театрын нэг билетийн үнэ — гэхдээ 145 анги үзнэ!
+- **Супер (18,000₮)**: Power user-үүдэд. Тасалбар бүр 30₮ — бараг 40% хямд.
 
-### 4.3 Per-Video Coin Costs
+### 4.3 Анги бүрийн тасалбарын үнэ
 
-| Video Duration | Coins Required | Cost (MNT at base rate) | Cost (USD) |
-|---------------|---------------|------------------------|-------------|
-| **1-3 min** (Short reel) | 3 coins | 300 MNT | $0.087 |
-| **3-5 min** (Standard short) | 5 coins | 500 MNT | $0.145 |
-| **5-10 min** (Medium) | 7 coins | 700 MNT | $0.203 |
-| **10-15 min** (Long) | 10 coins | 1,000 MNT | $0.290 |
+Бүх ангиуд **ижил 2 тасалбар (100₮)** байна. Ингэснээр:
+- Хэрэглэгчдэд ойлгомжтой, энгийн
+- "Энэ анги хэдэн тасалбар вэ?" гэж бодох шаардлагагүй
+- Бүтээгч ч ойлгоход хялбар
 
-**Rationale for these tiers:**
-- **3 coins (300 MNT) for the shortest content**: This is below a bus fare. Even minimum-wage earners can afford several per day. Creates zero friction for sampling content.
-- **5 coins (500 MNT) for standard shorts**: Equal to a bus fare. This is the "default" content length where most creators will target.
-- **7 coins (700 MNT) for medium content**: Still under 1,000 MNT, keeping it in impulse territory. The odd number (7 not 8) encourages buying a package rather than exact amounts.
-- **10 coins (1,000 MNT) for premium long content**: A round number that feels "premium but fair." Still 15x cheaper than a movie ticket for 10-15 minutes of content.
+| Контент | Тасалбар | Үнэ (MNT) |
+|---------|----------|-----------|
+| **Бүх анги (1-15 мин)** | 2 тасалбар | 100₮ |
+| **Үнэгүй анги** | 0 тасалбар | Үнэгүй |
 
-### 4.4 First-Time User Bonus
+### 4.4 Шинэ хэрэглэгчийн бонус
 
-**Recommendation: Give new users 10 free coins on registration.**
+**Зөвлөмж: Бүртгүүлэхэд 10 үнэгүй тасалбар (5 анги үзнэ).**
 
-| Bonus Type | Details |
-|-----------|---------|
-| **Sign-up bonus** | 10 free coins (enough for 2-3 short videos) |
-| **First purchase bonus** | 100% match on first purchase only (buy 30, get 30 bonus = 60 total) |
-| **Referral bonus** | 5 coins for referrer, 5 coins for new user |
-| **Daily check-in** | 1 free coin per day (encourages daily app opens) |
+| Бонус | Дэлгэрэнгүй |
+|-------|-------------|
+| **Бүртгэлийн бонус** | 10 тасалбар (5 анги үзнэ) |
+| **Эхний худалдан авалт** | 100% match — 20 авбал +20 бонус = 40 тасалбар |
+| **Найз урих** | Урьсан хүн 10 тасалбар, шинэ хэрэглэгч 10 тасалбар |
+| **Өдөр бүр нэвтрэх** | 1 үнэгүй тасалбар/өдөр (өдөр бүр орж ирэх сэдэл) |
 
-### 4.5 Series Unlock Economics
+### 4.5 Цувралын нийт өртөг
 
-For a typical MNREELS series (8-12 episodes, 3-5 min each):
+Ердийн MNREELS цуврал (25-30 анги, 1-15 мин/анги):
 
-| Series Length | Coins Needed (5 coins/ep) | Cost at Base Rate | Cost with Medium Pack |
-|--------------|--------------------------|-------------------|----------------------|
-| 6 episodes | 30 coins | 3,000 MNT (~$0.87) | ~2,220 MNT |
-| 10 episodes | 50 coins | 5,000 MNT (~$1.45) | ~3,700 MNT |
-| 12 episodes | 60 coins | 6,000 MNT (~$1.74) | ~4,440 MNT |
-| 20 episodes | 100 coins | 10,000 MNT (~$2.90) | ~7,400 MNT |
+| Цувралын урт | Тасалбар (2/анги) | Үнэ (суурь) | Үнэ (Дунд багцаар) |
+|--------------|-------------------|-------------|---------------------|
+| 10 анги | 20 тасалбар | 1,000₮ | ~740₮ |
+| 20 анги | 40 тасалбар | 2,000₮ | ~1,480₮ |
+| 25 анги | 50 тасалбар | 2,500₮ | ~1,850₮ |
+| 30 анги | 60 тасалбар | 3,000₮ | ~2,220₮ |
 
-**Context check:** Finishing a 10-episode series costs 5,000 MNT, which is:
-- 1/3 the price of a movie ticket
-- Less than a cappuccino
-- About 0.25% of average monthly income
-- Equivalent to 2-3 days of mobile data
+**Шалгалт:** 30 ангитай бүтэн цуврал = 3,000₮:
+- Кино театрын билетийн **1/5** — гэхдээ 30 анги = ~5-7.5 цагийн контент!
+- Нэг кофены **1/3** үнэ
+- Дундаж цалингийн **0.21%** (1,400,000₮)
+- Сард 3-4 цуврал үзвэл 9,000-12,000₮ — зугаа цэнгэлийн 15,000-40,000₮ төсвийн дотор
 
-This pricing is **sustainable for users** -- a viewer could watch 3-4 complete series per month and spend only 15,000-20,000 MNT ($4-$6), well within the entertainment budget.
+### 4.6 Бүтээгчийн орлого
 
-### 4.6 Creator Revenue Model
+85/15 хуваарилалт (85% бүтээгч, 15% платформ):
 
-With 85/15 split (85% creator, 15% platform):
+| Metric | Нэг анги (2 тасалбар = 100₮) |
+|--------|-------------------------------|
+| Нэг үзэлтийн орлого | 100₮ |
+| Бүтээгч авна (85%) | 85₮ ($0.025) |
+| Платформ авна (15%) | 15₮ ($0.004) |
+| 1,000 үзэлт | 85,000₮ ($24.6) |
+| 10,000 үзэлт | 850,000₮ ($246) |
+| 50,000 үзэлт | 4,250,000₮ ($1,232) |
 
-| Metric | Per Episode (5 coins) |
-|--------|----------------------|
-| Revenue per view | 500 MNT |
-| Creator receives (85%) | 425 MNT ($0.12) |
-| Platform receives (15%) | 75 MNT ($0.02) |
-| Creator revenue per 1,000 views | 425,000 MNT ($123) |
-| Creator revenue per 10,000 views | 4,250,000 MNT ($1,232) |
+**Бүтээгчийн орлогын тооцоо:**
+- 30 ангитай цуврал, анги бүр дунджаар 5,000 үзэлт:
+  - 30 × 5,000 × 85₮ = **12,750,000₮** (~$3,696) — дундаж цалингийн **9x**
+- 30 ангитай цуврал, анги бүр дунджаар 1,000 үзэлт:
+  - 30 × 1,000 × 85₮ = **2,550,000₮** (~$739) — дундаж цалингийн **1.8x**
+- Энэ нь Монголын бүтээгчдийг **маш хүчтэй** татах орлогын түвшин
 
-**Sustainability check:**
-- A creator whose single video gets 10,000 paid views earns 4.25M MNT -- roughly 1.5x the average monthly salary
-- A creator with a 10-episode series averaging 5,000 views/episode earns 21.25M MNT total (~$6,159)
-- This is competitive with Mongolian content creator incomes and should attract quality creators
+### 4.7 Үнэгүй контентын стратеги
 
-### 4.7 "Free Content" Strategy
+| Стратеги | Дэлгэрэнгүй |
+|----------|-------------|
+| **Эхний анги үнэгүй** | Цуврал бүрийн 1-р анги заавал үнэгүй (hook) |
+| **Бүтээгчийн сонголт** | Бүтээгч дурын ангийг үнэгүй болгож болно |
+| **Өдрийн үнэгүй анги** | Өдөр бүр 1 санамсаргүй premium анги бүх хэрэглэгчдэд үнэгүй |
+| **Зар үзэж тасалбар авах** | 30 секундын зар үзвэл 1 тасалбар авна (сонголтоор) |
+| **Үнэгүй preview** | Аливаа видеоны эхний 30 секунд үнэгүй (trailer) |
 
-To maximize user acquisition and conversion:
-
-| Strategy | Details |
-|----------|---------|
-| **First episode free** | Every series should have episode 1 free to hook viewers |
-| **Creator-set free videos** | Creators can mark any video as free (promotional) |
-| **Daily free video** | 1 random premium video free per day for all users |
-| **Ad-supported free viewing** | Option: Watch a 30-sec ad to unlock one episode (gives 3 coins equivalent) |
-| **Free preview** | First 30 seconds of any video always free (trailer) |
-
-### 4.8 Updated Architecture Values
-
-Based on this research, the coin system document (02-coin-system.md) should be updated with:
+### 4.8 Шинэчилсэн Architecture утгууд
 
 ```
-1 coin = 100 MNT
+НЭРШИЛ: "Тасалбар" (Tasalbar) — "Coin" биш
+1 тасалбар = 50 MNT
+Анги бүр = 2 тасалбар (100₮) — бүх ангиуд ижил үнэтэй
 
-Coin packages:
-- Trial:  30 coins  =  3,000 MNT
-- Small:  60+5 coins  =  5,500 MNT  (~8% bonus)
-- Medium: 120+15 coins = 10,000 MNT  (~13% bonus) [BEST VALUE]
-- Large:  250+40 coins = 20,000 MNT  (~18% bonus)
-- Super:  500+100 coins= 35,000 MNT  (~25% bonus)
+Тасалбар багц:
+- Турших:  20 тасалбар     =  1,000₮
+- Жижиг:  60+5 тасалбар    =  2,500₮  (~15% бонус)
+- Дунд:   120+15 тасалбар  =  5,000₮  (~18% бонус) [ХАМГИЙН АШИГТАЙ]
+- Том:    250+40 тасалбар  = 10,000₮  (~25% бонус)
+- Супер:  500+100 тасалбар = 18,000₮  (~33% бонус)
 
-Per-video costs:
-- 1-3 min:  3 coins (300 MNT)
-- 3-5 min:  5 coins (500 MNT)
-- 5-10 min: 7 coins (700 MNT)
-- 10-15 min: 10 coins (1,000 MNT)
+Бүтэн цуврал (30 анги) = 60 тасалбар = 3,000₮
 ```
 
 ---
 
 ## 5. Summary & Key Principles
 
-1. **Price for Mongolia, not the US**: International platforms charge $0.30-$1.00/episode targeting $5,000/month incomes. MNREELS targets $720/month incomes, so episodes should cost $0.09-$0.29 (300-1,000 MNT).
+1. **Price for Mongolia, not the US**: International platforms charge $0.30-$1.00/episode targeting $5,000/month incomes. MNREELS targets ~$406/month incomes (1,400,000₮). Тасалбар бүр 50₮, анги бүр 2 тасалбар = 100₮ — маш хүртээмжтэй.
 
-2. **Keep it under a bus fare for short content**: 300 MNT for a 1-3 minute video is less than a 500 MNT bus ride. This makes the purchase feel trivial.
+2. **Автобусны билетээс хямд**: Анги бүр 100₮ (2 тасалбар), автобусны билет 500₮. Impulse buy мэдрэмж бүрэн хангана.
 
-3. **Use coins, not direct pricing**: The psychological decoupling of purchase and consumption is proven to increase spending 20-40% versus direct pricing.
+3. **Тасалбар ашиглах, шууд мөнгө биш**: Сэтгэл зүйн decoupling нь зарцуулалтыг 20-40% нэмэгдүүлдэг. "Тасалбар" нэршил нь хуулийн эрсдэл бууруулна.
 
-4. **Bonus coins beat discounts**: "Get 15 bonus coins" is more motivating than "13% off." Always frame savings as getting more, not paying less.
+4. **Бонус тасалбар > Хөнгөлөлт**: "15 бонус тасалбар авах" нь "13% хямдрал"-аас илүү сэдэлтэй.
 
-5. **The medium package is the anchor**: Design the medium package (10,000 MNT) to be the obvious best choice. Mark it "BEST VALUE." This is a round QPay-friendly number.
+5. **Дунд багц = anchor**: Дунд багц (5,000₮) = хамгийн тодорхой "ХАМГИЙН АШИГТАЙ" сонголт. QPay-д тохиромжтой дугуй тоо.
 
 6. **First episode free, always**: This is the single most important conversion tool. If the content is good, users will pay for episode 2.
 

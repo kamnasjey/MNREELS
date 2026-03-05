@@ -7,8 +7,8 @@ Users ──────┬──── CreatorProfiles
   │         │
   │         ├──── Series ──── Videos
   │         │                   │
-  ├── CoinBalances              ├── Likes
-  ├── CoinTransactions          ├── Comments
+  ├── TasalbarBalances              ├── Likes
+  ├── TasalbarTransactions          ├── Comments
   ├── PaymentOrders             ├── Purchases
   ├── Follows                   └── ModerationLogs
   ├── Notifications
@@ -56,8 +56,8 @@ CREATE TABLE creator_profiles (
     bank_name       VARCHAR(100),
     bank_account    VARCHAR(50),
     account_holder  VARCHAR(100),
-    total_earnings  BIGINT DEFAULT 0,        -- Нийт олсон coin
-    total_withdrawn BIGINT DEFAULT 0,        -- Нийт татсан coin
+    total_earnings  BIGINT DEFAULT 0,        -- Нийт олсон тасалбар
+    total_withdrawn BIGINT DEFAULT 0,        -- Нийт татсан тасалбар
     follower_count  INT DEFAULT 0,
     video_count     INT DEFAULT 0,
     is_verified     BOOLEAN DEFAULT FALSE,
@@ -70,34 +70,34 @@ CREATE INDEX idx_creator_profiles_user_id ON creator_profiles(user_id);
 
 ---
 
-## 3. CoinBalances (Coin үлдэгдэл)
+## 3. TasalbarBalances (Тасалбар үлдэгдэл)
 
-Хэрэглэгч бүрийн coin үлдэгдэл.
+Хэрэглэгч бүрийн тасалбар үлдэгдэл.
 
 ```sql
-CREATE TABLE coin_balances (
+CREATE TABLE tasalbar_balances (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id         UUID UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     balance         BIGINT NOT NULL DEFAULT 0,
-    total_purchased BIGINT DEFAULT 0,        -- Нийт худалдаж авсан coin
-    total_spent     BIGINT DEFAULT 0,        -- Нийт зарцуулсан coin
+    total_purchased BIGINT DEFAULT 0,        -- Нийт худалдаж авсан тасалбар
+    total_spent     BIGINT DEFAULT 0,        -- Нийт зарцуулсан тасалбар
     updated_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_coin_balances_user_id ON coin_balances(user_id);
+CREATE INDEX idx_tasalbar_balances_user_id ON tasalbar_balances(user_id);
 ```
 
 ---
 
-## 4. CoinPackages (Coin багц)
+## 4. TasalbarPackages (Тасалбар багц)
 
-Худалдаж авах боломжтой coin багцууд.
+Худалдаж авах боломжтой тасалбар багцууд.
 
 ```sql
-CREATE TABLE coin_packages (
+CREATE TABLE tasalbar_packages (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name            VARCHAR(100) NOT NULL,       -- "Жижиг багц"
-    coin_amount     INT NOT NULL,                -- 50, 100, 200
+    tasalbar_amount     INT NOT NULL,                -- 50, 100, 200
     price_mnt       INT NOT NULL,                -- Үнэ (төгрөг)
     discount_pct    DECIMAL(5,2) DEFAULT 0,      -- Хөнгөлөлт %
     is_active       BOOLEAN DEFAULT TRUE,
@@ -116,8 +116,8 @@ QPay/SocialPay төлбөрийн бүртгэл.
 CREATE TABLE payment_orders (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id         UUID NOT NULL REFERENCES users(id),
-    package_id      UUID NOT NULL REFERENCES coin_packages(id),
-    coin_amount     INT NOT NULL,
+    package_id      UUID NOT NULL REFERENCES tasalbar_packages(id),
+    tasalbar_amount     INT NOT NULL,
     amount_mnt      INT NOT NULL,                -- Төлсөн дүн (төгрөг)
     payment_method  VARCHAR(20) NOT NULL,        -- 'qpay', 'socialpay'
     payment_ref     VARCHAR(255),                -- Гадны системийн reference
@@ -136,16 +136,16 @@ CREATE INDEX idx_payment_orders_invoice ON payment_orders(invoice_id);
 
 ---
 
-## 6. CoinTransactions (Coin гүйлгээ)
+## 6. TasalbarTransactions (Тасалбар гүйлгээ)
 
-Бүх coin хөдөлгөөний бүртгэл.
+Бүх тасалбар хөдөлгөөний бүртгэл.
 
 ```sql
-CREATE TABLE coin_transactions (
+CREATE TABLE tasalbar_transactions (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id         UUID NOT NULL REFERENCES users(id),
     type            VARCHAR(30) NOT NULL,
-                    -- 'purchase'    : Coin худалдаж авсан
+                    -- 'purchase'    : Тасалбар худалдаж авсан
                     -- 'spend'       : Кино үзэхэд зарцуулсан
                     -- 'earning'     : Бүтээгчийн олсон орлого
                     -- 'withdrawal'  : Бүтээгч мөнгө татсан
@@ -158,9 +158,9 @@ CREATE TABLE coin_transactions (
     created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_coin_transactions_user_id ON coin_transactions(user_id);
-CREATE INDEX idx_coin_transactions_type ON coin_transactions(type);
-CREATE INDEX idx_coin_transactions_created_at ON coin_transactions(created_at);
+CREATE INDEX idx_tasalbar_transactions_user_id ON tasalbar_transactions(user_id);
+CREATE INDEX idx_tasalbar_transactions_type ON tasalbar_transactions(type);
+CREATE INDEX idx_tasalbar_transactions_created_at ON tasalbar_transactions(created_at);
 ```
 
 ---
@@ -238,7 +238,7 @@ CREATE TABLE videos (
     duration_sec    INT NOT NULL,                 -- Видеоны урт (секунд)
 
     -- Үнэ
-    coin_price      INT NOT NULL DEFAULT 0,      -- 0 = үнэгүй
+    tasalbar_price      INT NOT NULL DEFAULT 0,      -- 0 = үнэгүй
     is_free         BOOLEAN DEFAULT FALSE,
 
     -- Ангилал & насны зэрэглэл
@@ -286,7 +286,7 @@ CREATE TABLE purchases (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id         UUID NOT NULL REFERENCES users(id),
     video_id        UUID NOT NULL REFERENCES videos(id),
-    coin_amount     INT NOT NULL,                -- Зарцуулсан coin
+    tasalbar_amount     INT NOT NULL,                -- Зарцуулсан тасалбар
     purchased_at    TIMESTAMPTZ DEFAULT NOW(),
     expires_at      TIMESTAMPTZ NOT NULL,        -- purchased_at + 48 цаг
     is_active       BOOLEAN DEFAULT TRUE,
@@ -366,7 +366,7 @@ CREATE INDEX idx_follows_follower_id ON follows(follower_id);
 CREATE TABLE payout_requests (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     creator_id      UUID NOT NULL REFERENCES users(id),
-    coin_amount     BIGINT NOT NULL,             -- Татах coin
+    tasalbar_amount     BIGINT NOT NULL,             -- Татах тасалбар
     platform_fee    BIGINT NOT NULL,             -- 15% платформын шимтгэл
     creator_amount  BIGINT NOT NULL,             -- 85% бүтээгчийн хүртэх
     amount_mnt      INT NOT NULL,                -- Төгрөгөөр хөрвүүлсэн дүн
@@ -466,12 +466,12 @@ CREATE INDEX idx_watch_history_video_id ON watch_history(video_id);
 
 ```
 users
- ├── 1:1  coin_balances
+ ├── 1:1  tasalbar_balances
  ├── 1:1  creator_profiles
  ├── 1:N  videos (creator)
  ├── 1:N  series (creator)
  ├── 1:N  payment_orders
- ├── 1:N  coin_transactions
+ ├── 1:N  tasalbar_transactions
  ├── 1:N  purchases
  ├── 1:N  likes
  ├── 1:N  comments
