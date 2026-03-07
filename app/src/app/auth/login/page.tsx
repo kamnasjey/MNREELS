@@ -1,12 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2, Play } from "lucide-react";
 import MobileShell from "@/components/MobileShell";
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  // Desktop → landing page руу чиглүүлэх
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) ||
+      window.innerWidth < 768;
+    if (!isMobile) {
+      router.replace("/landing");
+    }
+  }, [router]);
 
   const supabase = createClient();
 
