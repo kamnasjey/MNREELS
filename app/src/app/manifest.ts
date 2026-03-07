@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "MNREELS — Монголын богино кино",
+    name: "MNREELS — Богино контент платформ",
     short_name: "MNREELS",
     description:
-      "Монголын анхны богино хэмжээний кино платформ. Swipe хийж, шилдэг бүтээгчдийн кино үзээрэй.",
+      "Монголын анхны богино контент платформ. Бүтээгчид өөрсдийн контентийг төлбөртэйгээр хүртээнэ.",
     start_url: "/",
     display: "standalone",
     background_color: "#000000",

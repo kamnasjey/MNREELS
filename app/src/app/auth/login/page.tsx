@@ -26,7 +26,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-12">
           <h1 className="text-3xl font-black tracking-tight">MNREELS</h1>
-          <p className="text-sm text-white/40 mt-2">Монголын кино платформ</p>
+          <p className="text-sm text-white/40 mt-2">Богино контент платформ</p>
         </div>
 
         {/* Google Sign In */}

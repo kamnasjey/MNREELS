@@ -125,7 +125,7 @@ export default function ProfileFeed({
             ))}
           </div>
 
-          {/* Үзсэн tab — кино grid */}
+          {/* Үзсэн tab — контент grid */}
           {activeTab === "Үзсэн" && (
             <div className="grid grid-cols-3 gap-0.5 mt-0.5">
               {watchedSeries.length > 0 ? (

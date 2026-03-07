@@ -24,7 +24,7 @@ export default function CreatorRegisterPage() {
           </div>
           <h1 className="text-xl font-bold mb-2">Амжилттай бүртгэгдлээ!</h1>
           <p className="text-sm text-white/40 text-center mb-8">
-            Та одоо кино оруулж орлого олох боломжтой боллоо
+            Та одоо контент оруулж орлого олох боломжтой боллоо
           </p>
           <Link
             href="/creator"
@@ -54,7 +54,7 @@ export default function CreatorRegisterPage() {
           <div className="mx-4 mt-3 p-4 rounded-2xl bg-gradient-to-br from-purple-500/20 via-indigo-500/10 to-blue-500/20 border border-purple-500/20">
             <p className="text-sm font-medium text-purple-300 mb-1">Орлого олох боломж</p>
             <p className="text-xs text-white/50 leading-relaxed">
-              Кино, цуврал оруулж үзэгчдээс тасалбар цуглуулна.
+              Контент оруулж үзэгчдээс тасалбар цуглуулна.
               Орлогын 85% танд, 15% платформд.
             </p>
           </div>

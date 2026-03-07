@@ -207,7 +207,7 @@ export default function HomeFeed({ seriesList, trendingList, newList, categories
           );
         })}
 
-        {/* Үнэгүй кино */}
+        {/* Үнэгүй контент */}
         {seriesList.filter(s => s.freeEpisodes >= 3).length > 0 && (
           <Section title="Үнэгүй эхлэх" icon="🆓" showMore>
             <div className="flex gap-3 px-4 overflow-x-auto hide-scrollbar">

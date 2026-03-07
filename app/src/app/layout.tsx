@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MNREELS — Монголын богино кино",
-  description: "Монголын анхны богино хэмжээний кино платформ. Swipe хийж, шилдэг бүтээгчдийн кино үзээрэй.",
+  title: "MNREELS — Богино контент платформ",
+  description: "Монголын анхны богино контент платформ. Бүтээгчид өөрсдийн контентийг төлбөртэйгээр хүртээнэ.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
