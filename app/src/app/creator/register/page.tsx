@@ -55,7 +55,7 @@ export default function CreatorRegisterPage() {
             <p className="text-sm font-medium text-purple-300 mb-1">Орлого олох боломж</p>
             <p className="text-xs text-white/50 leading-relaxed">
               Контент оруулж үзэгчдээс тасалбар цуглуулна.
-              Орлогын 85% танд, 15% платформд.
+              Орлогын 80% танд, 20% платформд.
             </p>
           </div>
 
@@ -137,7 +137,7 @@ export default function CreatorRegisterPage() {
               </div>
               <p className="text-xs text-white/40 leading-relaxed">
                 Би MNREELS-ийн бүтээгчийн нөхцлийг зөвшөөрч байна.
-                Орлогын 85/15 хуваарилалт, 2 цагийн модерацитай.
+                Орлогын 80/20 хуваарилалт, 2 цагийн модерацитай.
               </p>
             </div>
 

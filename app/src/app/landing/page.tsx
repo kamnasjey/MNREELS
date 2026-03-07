@@ -257,7 +257,7 @@ export default function LandingPage() {
               </p>
               <div className="space-y-4 mb-8">
                 {[
-                  { icon: TrendingUp, text: "Орлогын 85% шууд танд", color: "text-green-400" },
+                  { icon: TrendingUp, text: "Орлогын 80% шууд танд", color: "text-green-400" },
                   { icon: Shield, text: "Контентын эрх бүрэн таных", color: "text-blue-400" },
                   { icon: Zap, text: "Бодит цагийн аналитик", color: "text-yellow-400" },
                 ].map((item) => (
@@ -277,7 +277,7 @@ export default function LandingPage() {
             {/* Creator stats cards */}
             <div className="flex-shrink-0 grid grid-cols-2 gap-4">
               {[
-                { value: "85%", label: "Орлого", bg: "from-green-500/20 to-green-500/5" },
+                { value: "80%", label: "Орлого", bg: "from-green-500/20 to-green-500/5" },
                 { value: "∞", label: "Upload", bg: "from-blue-500/20 to-blue-500/5" },
                 { value: "24/7", label: "Статистик", bg: "from-yellow-500/20 to-yellow-500/5" },
                 { value: "0₮", label: "Бүртгэл", bg: "from-purple-500/20 to-purple-500/5" },

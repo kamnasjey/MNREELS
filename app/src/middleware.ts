@@ -1,8 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Routes that require authentication
-const protectedRoutes = ["/creator", "/profile", "/tasalbar"];
+// Public routes that don't require authentication
+const publicRoutes = ["/auth", "/terms", "/landing"];
 // Routes that require creator role
 const creatorRoutes = ["/creator/upload", "/creator/series"];
 
@@ -40,14 +40,17 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // Check protected routes
-  if (protectedRoutes.some((route) => path.startsWith(route))) {
-    if (!user) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/auth/login";
+  // Allow public routes without auth
+  const isPublic = publicRoutes.some((route) => path.startsWith(route));
+
+  // Redirect unauthenticated users to login (except public routes)
+  if (!isPublic && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/login";
+    if (path !== "/") {
       url.searchParams.set("next", path);
-      return NextResponse.redirect(url);
     }
+    return NextResponse.redirect(url);
   }
 
   return supabaseResponse;

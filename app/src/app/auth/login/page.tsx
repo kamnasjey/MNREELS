@@ -1,14 +1,40 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Loader2, Play, Sparkles, TrendingUp } from "lucide-react";
 import MobileShell from "@/components/MobileShell";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
 
   const supabase = createClient();
+
+  const slides = [
+    {
+      icon: <Play size={28} className="text-red-400" />,
+      title: "Богино контент үз",
+      desc: "Бүтээгчдийн шилдэг контентийг нэг дороос",
+    },
+    {
+      icon: <Sparkles size={28} className="text-purple-400" />,
+      title: "Бүтээгч бол",
+      desc: "Өөрийн контентоо оруулж орлого ол",
+    },
+    {
+      icon: <TrendingUp size={28} className="text-emerald-400" />,
+      title: "Орлого олох",
+      desc: "Тасалбарын 80% бүтээгчид очно",
+    },
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % slides.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
 
   const signInWithGoogle = async () => {
     setLoading(true);
@@ -21,12 +47,68 @@ export default function LoginPage() {
   };
 
   return (
-    <MobileShell>
-      <div className="h-dvh w-full flex flex-col justify-center px-6">
+    <MobileShell hideNav>
+      <div className="h-dvh w-full flex flex-col px-6 overflow-hidden">
+        {/* Top spacer */}
+        <div className="flex-1 min-h-0" />
+
         {/* Logo */}
-        <div className="text-center mb-12">
-          <h1 className="text-3xl font-black tracking-tight">MNREELS</h1>
-          <p className="text-sm text-white/40 mt-2">Богино контент платформ</p>
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-purple-600 mb-4">
+            <Play size={32} className="text-white fill-white ml-1" />
+          </div>
+          <h1 className="text-4xl font-black tracking-tight">MNREELS</h1>
+          <p className="text-sm text-white/40 mt-1">Богино контент платформ</p>
+        </div>
+
+        {/* Feature carousel */}
+        <div className="relative h-24 mb-8 overflow-hidden">
+          {slides.map((slide, i) => (
+            <div
+              key={i}
+              className={`absolute inset-0 flex flex-col items-center justify-center text-center transition-all duration-500 ${
+                i === activeSlide
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-4"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                {slide.icon}
+                <span className="font-bold text-base">{slide.title}</span>
+              </div>
+              <p className="text-sm text-white/50">{slide.desc}</p>
+            </div>
+          ))}
+
+          {/* Dots */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {slides.map((_, i) => (
+              <div
+                key={i}
+                className={`h-1 rounded-full transition-all duration-300 ${
+                  i === activeSlide ? "w-6 bg-white" : "w-1.5 bg-white/20"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="flex justify-center gap-8 mb-8">
+          <div className="text-center">
+            <p className="text-lg font-bold">80%</p>
+            <p className="text-[10px] text-white/30">Бүтээгчид</p>
+          </div>
+          <div className="w-px bg-white/10" />
+          <div className="text-center">
+            <p className="text-lg font-bold">HD</p>
+            <p className="text-[10px] text-white/30">Чанартай</p>
+          </div>
+          <div className="w-px bg-white/10" />
+          <div className="text-center">
+            <p className="text-lg font-bold">24/7</p>
+            <p className="text-[10px] text-white/30">Хүртээмжтэй</p>
+          </div>
         </div>
 
         {/* Google Sign In */}
@@ -62,9 +144,9 @@ export default function LoginPage() {
           )}
         </button>
 
-        <p className="text-[10px] text-white/20 text-center mt-8 leading-relaxed">
-          Нэвтрэхдээ MNREELS-ийн <a href="/terms" className="underline">үйлчилгээний нөхцлийг</a> зөвшөөрч байна
-        </p>
+        {/* Bottom spacer */}
+        <div className="flex-1 min-h-0" />
+        <div className="pb-8" />
       </div>
     </MobileShell>
   );

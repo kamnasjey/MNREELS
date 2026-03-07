@@ -71,7 +71,7 @@ export async function unlockEpisode(episodeId: string) {
   }
 
   const cost = episode.tasalbar_cost;
-  const creatorShare = Math.round(cost * 0.85);
+  const creatorShare = Math.round(cost * 0.80);
   const platformShare = cost - creatorShare;
   const creatorId = (episode.series as any).creator_id;
 
@@ -98,7 +98,7 @@ export async function unlockEpisode(episodeId: string) {
     episode_id: episodeId,
   });
 
-  // Credit creator (85%)
+  // Credit creator (80%)
   await supabase.rpc("increment_balance", {
     user_id: creatorId,
     amount: creatorShare,
