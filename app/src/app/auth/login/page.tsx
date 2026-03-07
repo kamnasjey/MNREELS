@@ -1,40 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Loader2, Play, Sparkles, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { Loader2, Play } from "lucide-react";
 import MobileShell from "@/components/MobileShell";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(0);
 
   const supabase = createClient();
-
-  const slides = [
-    {
-      icon: <Play size={28} className="text-red-400" />,
-      title: "Богино контент үз",
-      desc: "Бүтээгчдийн шилдэг контентийг нэг дороос",
-    },
-    {
-      icon: <Sparkles size={28} className="text-purple-400" />,
-      title: "Бүтээгч бол",
-      desc: "Өөрийн контентоо оруулж орлого ол",
-    },
-    {
-      icon: <TrendingUp size={28} className="text-emerald-400" />,
-      title: "Орлого олох",
-      desc: "Тасалбарын 80% бүтээгчид очно",
-    },
-  ];
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % slides.length);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, [slides.length]);
 
   const signInWithGoogle = async () => {
     setLoading(true);
@@ -48,80 +22,36 @@ export default function LoginPage() {
 
   return (
     <MobileShell hideNav>
-      <div className="h-dvh w-full flex flex-col px-6 overflow-hidden">
-        {/* Top spacer */}
-        <div className="flex-1 min-h-0" />
+      <div className="h-dvh w-full flex flex-col items-center justify-center px-6 relative overflow-hidden">
+        {/* Animated gradient background */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-[-30%] left-[-20%] w-[70%] h-[60%] rounded-full bg-red-600/30 blur-[100px] animate-pulse" />
+          <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[50%] rounded-full bg-purple-600/25 blur-[100px] animate-pulse [animation-delay:1s]" />
+          <div className="absolute top-[40%] left-[50%] -translate-x-1/2 w-[40%] h-[30%] rounded-full bg-pink-500/20 blur-[80px] animate-pulse [animation-delay:2s]" />
+        </div>
 
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-purple-600 mb-4">
-            <Play size={32} className="text-white fill-white ml-1" />
-          </div>
-          <h1 className="text-4xl font-black tracking-tight">MNREELS</h1>
-          <p className="text-sm text-white/40 mt-1">Богино контент платформ</p>
-        </div>
-
-        {/* Feature carousel */}
-        <div className="relative h-24 mb-8 overflow-hidden">
-          {slides.map((slide, i) => (
-            <div
-              key={i}
-              className={`absolute inset-0 flex flex-col items-center justify-center text-center transition-all duration-500 ${
-                i === activeSlide
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4"
-              }`}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                {slide.icon}
-                <span className="font-bold text-base">{slide.title}</span>
-              </div>
-              <p className="text-sm text-white/50">{slide.desc}</p>
-            </div>
-          ))}
-
-          {/* Dots */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-1.5">
-            {slides.map((_, i) => (
-              <div
-                key={i}
-                className={`h-1 rounded-full transition-all duration-300 ${
-                  i === activeSlide ? "w-6 bg-white" : "w-1.5 bg-white/20"
-                }`}
-              />
-            ))}
+        <div className="relative mb-6">
+          <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-purple-600 rounded-3xl blur-xl opacity-50 scale-125" />
+          <div className="relative inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-gradient-to-br from-red-500 via-pink-500 to-purple-600 shadow-2xl shadow-purple-500/30">
+            <Play size={48} className="text-white fill-white ml-1.5" />
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="flex justify-center gap-8 mb-8">
-          <div className="text-center">
-            <p className="text-lg font-bold">80%</p>
-            <p className="text-[10px] text-white/30">Бүтээгчид</p>
-          </div>
-          <div className="w-px bg-white/10" />
-          <div className="text-center">
-            <p className="text-lg font-bold">HD</p>
-            <p className="text-[10px] text-white/30">Чанартай</p>
-          </div>
-          <div className="w-px bg-white/10" />
-          <div className="text-center">
-            <p className="text-lg font-bold">24/7</p>
-            <p className="text-[10px] text-white/30">Хүртээмжтэй</p>
-          </div>
-        </div>
+        <h1 className="text-5xl font-black tracking-tight mb-1">MNREELS</h1>
+        <p className="text-base text-white/50 mb-16">Богино контент платформ</p>
 
         {/* Google Sign In */}
         <button
           onClick={signInWithGoogle}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-3 bg-white text-black py-3.5 rounded-xl font-semibold text-sm transition-all hover:bg-white/90 disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-3 bg-white text-black py-4 rounded-2xl font-semibold text-sm transition-all hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-white/10"
         >
           {loading ? (
-            <Loader2 size={16} className="animate-spin" />
+            <Loader2 size={18} className="animate-spin" />
           ) : (
             <>
-              <svg width="18" height="18" viewBox="0 0 24 24">
+              <svg width="20" height="20" viewBox="0 0 24 24">
                 <path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
                   fill="#4285F4"
@@ -143,10 +73,6 @@ export default function LoginPage() {
             </>
           )}
         </button>
-
-        {/* Bottom spacer */}
-        <div className="flex-1 min-h-0" />
-        <div className="pb-8" />
       </div>
     </MobileShell>
   );
