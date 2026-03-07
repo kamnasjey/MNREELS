@@ -63,7 +63,7 @@ export default function LoginPage() {
         </button>
 
         <p className="text-[10px] text-white/20 text-center mt-8 leading-relaxed">
-          Нэвтрэхдээ MNREELS-ийн үйлчилгээний нөхцлийг зөвшөөрч байна
+          Нэвтрэхдээ MNREELS-ийн <a href="/terms" className="underline">үйлчилгээний нөхцлийг</a> зөвшөөрч байна
         </p>
       </div>
     </MobileShell>

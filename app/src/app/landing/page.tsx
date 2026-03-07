@@ -372,8 +372,8 @@ export default function LandingPage() {
             <span className="text-xs text-white/20">© 2026</span>
           </div>
           <div className="flex gap-6 text-xs text-white/30">
-            <a href="#" className="hover:text-white/60 transition-colors">Нууцлал</a>
-            <a href="#" className="hover:text-white/60 transition-colors">Үйлчилгээний нөхцөл</a>
+            <a href="/terms" className="hover:text-white/60 transition-colors">Нууцлал</a>
+            <a href="/terms" className="hover:text-white/60 transition-colors">Үйлчилгээний нөхцөл</a>
             <a href="#" className="hover:text-white/60 transition-colors">Холбоо барих</a>
           </div>
         </div>
