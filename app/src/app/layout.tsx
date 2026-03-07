@@ -4,6 +4,14 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "MNREELS — Монголын богино кино",
   description: "Монголын анхны богино хэмжээний кино платформ. Swipe хийж, шилдэг бүтээгчдийн кино үзээрэй.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "MNREELS",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
@@ -12,6 +20,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: "#000000",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

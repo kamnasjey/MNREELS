@@ -2,6 +2,130 @@
 
 import { createServerSupabase } from "@/lib/supabase/server";
 
+// Gradient colors for series without cover images
+const GRADIENTS = [
+  "from-purple-800 to-indigo-900",
+  "from-cyan-800 to-teal-900",
+  "from-red-800 to-rose-900",
+  "from-amber-800 to-yellow-900",
+  "from-pink-800 to-fuchsia-900",
+  "from-emerald-800 to-green-900",
+];
+
+function assignGradient(index: number) {
+  return GRADIENTS[index % GRADIENTS.length];
+}
+
+export async function getAllPublishedSeries() {
+  const supabase = await createServerSupabase();
+
+  const { data } = await supabase
+    .from("series")
+    .select("*, profiles:creator_id(display_name, username, avatar_url), episodes(count)")
+    .eq("is_published", true)
+    .order("created_at", { ascending: false });
+
+  return (data ?? []).map((s: Record<string, unknown>, i: number) => ({
+    ...s,
+    gradient: assignGradient(i),
+  }));
+}
+
+export async function getNewSeries() {
+  const supabase = await createServerSupabase();
+
+  const { data } = await supabase
+    .from("series")
+    .select("*, profiles:creator_id(display_name)")
+    .eq("is_published", true)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  return (data ?? []).map((s: Record<string, unknown>, i: number) => ({
+    ...s,
+    gradient: assignGradient(i),
+  }));
+}
+
+export async function searchSeries(query: string) {
+  const supabase = await createServerSupabase();
+
+  const { data } = await supabase.rpc("search_series", {
+    search_query: query,
+  });
+
+  return (data ?? []).map((s: Record<string, unknown>, i: number) => ({
+    ...s,
+    gradient: assignGradient(i),
+  }));
+}
+
+export async function getContinueWatching() {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data } = await supabase.rpc("get_continue_watching", {
+    p_user_id: user.id,
+  });
+
+  return data ?? [];
+}
+
+export async function getFollowedCreators() {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data } = await supabase
+    .from("follows")
+    .select("creator_id, profiles:creator_id(id, display_name, username, avatar_url)")
+    .eq("user_id", user.id)
+    .not("creator_id", "is", null);
+
+  return data ?? [];
+}
+
+export async function followCreator(creatorId: string) {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Нэвтрэх шаардлагатай");
+
+  const { error } = await supabase
+    .from("follows")
+    .insert({ user_id: user.id, creator_id: creatorId });
+
+  if (error && error.code !== "23505") throw new Error(error.message);
+}
+
+export async function unfollowCreator(creatorId: string) {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Нэвтрэх шаардлагатай");
+
+  await supabase
+    .from("follows")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("creator_id", creatorId);
+}
+
+export async function saveWatchProgress(episodeId: string, progress: number, completed: boolean) {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase
+    .from("watch_history")
+    .upsert({
+      user_id: user.id,
+      episode_id: episodeId,
+      progress,
+      completed,
+      last_watched_at: new Date().toISOString(),
+    }, { onConflict: "user_id,episode_id" });
+}
+
 export async function createSeries(formData: {
   title: string;
   description: string;

@@ -1,168 +1,121 @@
-"use client";
-
-import { useState } from "react";
-import { Settings, Edit3, Eye, Users, LogOut, ChevronRight } from "lucide-react";
+import { createServerSupabase } from "@/lib/supabase/server";
+import { getFollowedCreators } from "@/lib/actions/series";
 import { mockSeries, mockCreators } from "@/lib/mock-data";
-import MobileShell from "@/components/MobileShell";
-import Link from "next/link";
+import ProfileFeed from "@/components/ProfileFeed";
 
-const tabs = ["Үзсэн", "Дагсан"];
+const GRADIENTS = [
+  "from-purple-800 to-indigo-900",
+  "from-cyan-800 to-teal-900",
+  "from-red-800 to-rose-900",
+  "from-amber-800 to-yellow-900",
+  "from-pink-800 to-fuchsia-900",
+  "from-emerald-800 to-green-900",
+];
 
-export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState("Үзсэн");
+export default async function ProfilePage() {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return (
+      <ProfileFeed
+        user={{ username: "", displayName: "", avatarInitial: "?", bio: "", followingCount: 0 }}
+        watchedSeries={[]}
+        followedCreators={[]}
+        followedSeries={[]}
+        isLoggedIn={false}
+      />
+    );
+  }
+
+  // Fetch profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("username, display_name, avatar_url, bio")
+    .eq("id", user.id)
+    .single();
+
+  const displayName = profile?.display_name ?? user.email?.split("@")[0] ?? "User";
+  const username = profile?.username ?? user.email?.split("@")[0] ?? "user";
+
+  // Fetch watch history + followed creators in parallel
+  const [watchHistory, followedData] = await Promise.all([
+    supabase
+      .from("watch_history")
+      .select("episode_id, progress, completed, episodes:episode_id(id, series_id, series:series_id(id, title, category, cover_url, free_episodes))")
+      .eq("user_id", user.id)
+      .order("last_watched_at", { ascending: false })
+      .limit(20)
+      .then(({ data }) => data ?? []),
+    getFollowedCreators().catch(() => []),
+  ]);
+
+  // Process watched series (deduplicate by series)
+  const watchedSeriesMap = new Map<string, { id: string; title: string; creator: string; episodes: number; category: string; rating: number; gradient: string; watchedEpisodes: number; coverUrl?: string }>();
+  for (const wh of watchHistory) {
+    const ep = wh.episodes as Record<string, unknown> | undefined;
+    const series = ep?.series as Record<string, unknown> | undefined;
+    if (!series) continue;
+    const seriesId = String(series.id);
+    if (watchedSeriesMap.has(seriesId)) {
+      watchedSeriesMap.get(seriesId)!.watchedEpisodes++;
+      continue;
+    }
+    watchedSeriesMap.set(seriesId, {
+      id: seriesId,
+      title: String(series.title ?? ""),
+      creator: "",
+      episodes: 0,
+      category: String(series.category ?? ""),
+      rating: 0,
+      gradient: GRADIENTS[watchedSeriesMap.size % GRADIENTS.length],
+      watchedEpisodes: 1,
+      coverUrl: series.cover_url ? String(series.cover_url) : undefined,
+    });
+  }
+
+  const hasRealWatchData = watchedSeriesMap.size > 0;
+  const watchedSeries = hasRealWatchData
+    ? Array.from(watchedSeriesMap.values())
+    : mockSeries.map((s) => ({
+        id: s.id,
+        title: s.title,
+        creator: s.creator,
+        episodes: s.episodes,
+        category: s.category,
+        rating: s.rating,
+        gradient: s.gradient,
+        watchedEpisodes: 3,
+      }));
+
+  // Process followed creators
+  const hasRealFollowData = followedData.length > 0;
+  const followedCreators = hasRealFollowData
+    ? followedData.map((f: Record<string, unknown>) => {
+        const p = f.profiles as Record<string, unknown> | undefined;
+        return {
+          id: String(p?.id ?? f.creator_id),
+          name: String(p?.display_name ?? ""),
+          avatar: String(p?.display_name ?? "").slice(0, 2),
+          seriesCount: 0,
+          gradient: "from-purple-600 to-indigo-600",
+        };
+      })
+    : mockCreators.slice(0, 3);
 
   return (
-    <MobileShell>
-      <div className="h-dvh w-full overflow-y-auto pb-20 hide-scrollbar">
-        <div className="pt-[env(safe-area-inset-top)]">
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 pt-4 pb-2">
-            <Settings size={22} className="text-white/60" />
-            <button className="flex items-center gap-1.5 text-sm text-white/60">
-              <Edit3 size={14} />
-              Засах
-            </button>
-          </div>
-
-          {/* Profile info */}
-          <div className="flex flex-col items-center px-4 mt-2">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-bold">
-              К
-            </div>
-            <h2 className="font-bold text-lg mt-3">@kamna</h2>
-            <p className="text-sm text-white/40 mt-1 text-center">
-              Кино үзэх дуртай
-            </p>
-
-            {/* Stats — зөвхөн дагсан */}
-            <div className="mt-4 bg-white/5 rounded-xl px-6 py-3">
-              <div className="text-center">
-                <p className="font-bold text-lg">12</p>
-                <p className="text-[11px] text-white/40">Дагсан</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex border-b border-white/10 mt-6">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
-                  activeTab === tab ? "text-white" : "text-white/30"
-                }`}
-              >
-                <div className="flex items-center justify-center gap-1.5">
-                  {tab === "Үзсэн" && <Eye size={14} />}
-                  {tab === "Дагсан" && <Users size={14} />}
-                  {tab}
-                </div>
-                {activeTab === tab && (
-                  <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-white rounded-full" />
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Үзсэн tab — кино grid */}
-          {activeTab === "Үзсэн" && (
-            <div className="grid grid-cols-3 gap-0.5 mt-0.5">
-              {mockSeries.map((series) => (
-                <div key={series.id} className={`aspect-[3/4] bg-gradient-to-br ${series.gradient} relative`}>
-                  <div className="absolute inset-0 flex flex-col justify-end p-2 bg-gradient-to-t from-black/60 to-transparent">
-                    <p className="font-bold text-[10px] leading-tight">{series.title}</p>
-                    <p className="text-[9px] text-white/50">{series.episodes} анги</p>
-                  </div>
-                  <div className="absolute top-1.5 right-1.5 bg-black/50 rounded-full px-1.5 py-0.5">
-                    <span className="text-[8px] text-white/70">3/{series.episodes}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Дагсан tab — бүтээгч + цуврал */}
-          {activeTab === "Дагсан" && (
-            <div className="px-4 mt-3 space-y-2">
-              {mockCreators.slice(0, 3).map((creator) => (
-                <div
-                  key={creator.id}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-white/5"
-                >
-                  <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${creator.gradient} flex items-center justify-center text-sm font-bold`}>
-                    {creator.avatar}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm">{creator.name}</p>
-                    <p className="text-[11px] text-white/40">
-                      {creator.seriesCount} цуврал
-                    </p>
-                  </div>
-                  <button className="text-xs font-semibold text-red-400 bg-red-500/10 px-3 py-1.5 rounded-full">
-                    Дагсан
-                  </button>
-                </div>
-              ))}
-
-              <p className="text-xs text-white/30 mt-4 mb-2 font-medium">Цуврал</p>
-              {mockSeries.slice(0, 3).map((series) => (
-                <div
-                  key={series.id}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-white/5"
-                >
-                  <div className={`w-11 h-14 rounded-lg bg-gradient-to-br ${series.gradient} flex items-end p-1.5`}>
-                    <p className="text-[8px] font-bold leading-tight">{series.title}</p>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm">{series.title}</p>
-                    <p className="text-[11px] text-white/40">
-                      {series.episodes} анги • {series.creator}
-                    </p>
-                  </div>
-                  <button className="text-xs font-semibold text-red-400 bg-red-500/10 px-3 py-1.5 rounded-full">
-                    Дагсан
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Menu items */}
-          <div className="px-4 mt-6 space-y-1 pb-4">
-            <Link
-              href="/creator/register"
-              className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors"
-            >
-              <div>
-                <p className="text-sm font-medium text-left">Бүтээгч болох</p>
-                <p className="text-[11px] text-white/30">Кино оруулж орлого олох</p>
-              </div>
-              <ChevronRight size={18} className="text-white/20" />
-            </Link>
-            {[
-              { label: "Тохиргоо", desc: "Мэдэгдэл, нууцлал, хэл" },
-              { label: "Тусламж", desc: "Түгээмэл асуулт & хариулт" },
-            ].map((item) => (
-              <button
-                key={item.label}
-                className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors"
-              >
-                <div>
-                  <p className="text-sm font-medium text-left">{item.label}</p>
-                  <p className="text-[11px] text-white/30">{item.desc}</p>
-                </div>
-                <ChevronRight size={18} className="text-white/20" />
-              </button>
-            ))}
-
-            <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-500/10 transition-colors mt-2">
-              <LogOut size={18} className="text-red-400" />
-              <span className="text-sm text-red-400">Гарах</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </MobileShell>
+    <ProfileFeed
+      user={{
+        username,
+        displayName,
+        avatarInitial: displayName.slice(0, 1).toUpperCase(),
+        bio: profile?.bio ?? "Кино үзэх дуртай",
+        followingCount: followedData.length || 12,
+      }}
+      watchedSeries={watchedSeries}
+      followedCreators={followedCreators}
+      followedSeries={[]}
+      isLoggedIn={true}
+    />
   );
 }
