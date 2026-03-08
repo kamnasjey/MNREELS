@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, User, Phone, Building2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, User, Phone, Building2, CheckCircle2, Loader2 } from "lucide-react";
 import MobileShell from "@/components/MobileShell";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 export default function CreatorRegisterPage() {
   const [name, setName] = useState("");
@@ -12,8 +14,46 @@ export default function CreatorRegisterPage() {
   const [accountNumber, setAccountNumber] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const supabase = createClient();
+  const router = useRouter();
 
   const isValid = name && phone.length >= 8 && bank && accountNumber.length >= 8 && agreed;
+
+  const handleSubmit = async () => {
+    if (!isValid || saving) return;
+    setSaving(true);
+    setError("");
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setError("Нэвтрэх шаардлагатай");
+      setSaving(false);
+      return;
+    }
+
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({
+        display_name: name,
+        phone,
+        bank_name: bank,
+        bank_account: accountNumber,
+        is_creator: true,
+      })
+      .eq("id", user.id);
+
+    if (updateError) {
+      setError("Алдаа гарлаа. Дахин оролдоно уу.");
+      setSaving(false);
+      return;
+    }
+
+    setSubmitted(true);
+    setSaving(false);
+  };
 
   if (submitted) {
     return (
@@ -26,12 +66,12 @@ export default function CreatorRegisterPage() {
           <p className="text-sm text-white/40 text-center mb-8">
             Та одоо контент оруулж орлого олох боломжтой боллоо
           </p>
-          <Link
-            href="/creator"
+          <button
+            onClick={() => router.push("/creator")}
             className="w-full py-3.5 rounded-xl bg-white text-black font-semibold text-sm text-center"
           >
             Бүтээгчийн самбар руу очих →
-          </Link>
+          </button>
         </div>
       </MobileShell>
     );
@@ -136,21 +176,31 @@ export default function CreatorRegisterPage() {
                 {agreed && <CheckCircle2 size={14} className="text-black" />}
               </div>
               <p className="text-xs text-white/40 leading-relaxed">
-                Би MNREELS-ийн бүтээгчийн нөхцлийг зөвшөөрч байна.
+                Би MNREELS-ийн <a href="/terms" className="underline">үйлчилгээний нөхцөл</a>ийг зөвшөөрч байна.
                 Орлогын 80/20 хуваарилалт, 2 цагийн модерацитай.
               </p>
             </div>
 
+            {/* Error */}
+            {error && (
+              <p className="text-xs text-red-400 text-center">{error}</p>
+            )}
+
             {/* Submit */}
             <button
-              onClick={() => isValid && setSubmitted(true)}
-              className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all ${
-                isValid
+              onClick={handleSubmit}
+              disabled={!isValid || saving}
+              className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                isValid && !saving
                   ? "bg-white text-black hover:bg-white/90"
                   : "bg-white/10 text-white/30 cursor-not-allowed"
               }`}
             >
-              Бүтээгч болох
+              {saving ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                "Бүтээгч болох"
+              )}
             </button>
           </div>
         </div>
