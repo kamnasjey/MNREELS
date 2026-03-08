@@ -1,34 +1,121 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft, Upload, Film, ChevronDown, Check } from "lucide-react";
-import MobileShell from "@/components/MobileShell";
+import { useState, useEffect, useRef } from "react";
+import { ArrowLeft, Upload, Film, Check, Loader2 } from "lucide-react";
+import CreatorShell from "@/components/CreatorShell";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+interface SeriesOption {
+  id: string;
+  title: string;
+}
 
 export default function UploadPage() {
-  const [selectedSeries, setSelectedSeries] = useState("");
+  const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [series, setSeries] = useState<SeriesOption[]>([]);
+  const [selectedSeriesId, setSelectedSeriesId] = useState("");
   const [episodeTitle, setEpisodeTitle] = useState("");
   const [episodeNumber, setEpisodeNumber] = useState("");
   const [isFree, setIsFree] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleUpload = () => {
-    setUploading(true);
-    // Simulate upload progress
-    let p = 0;
-    const interval = setInterval(() => {
-      p += Math.random() * 15;
-      if (p >= 100) {
-        p = 100;
-        clearInterval(interval);
-      }
-      setProgress(Math.min(p, 100));
-    }, 500);
+  // Fetch creator's series
+  useEffect(() => {
+    fetch("/api/creator/series")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setSeries(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleFileSelect = () => {
+    fileRef.current?.click();
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (f.size > 2 * 1024 * 1024 * 1024) {
+      setError("Файл хэт том (2GB хүртэл)");
+      return;
+    }
+    setFile(f);
+    setError("");
+  };
+
+  const handleUpload = async () => {
+    if (!file || !selectedSeriesId || !episodeTitle || !episodeNumber) return;
+    setUploading(true);
+    setError("");
+    setProgress(0);
+
+    try {
+      // 1. Get presigned URL from API
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type || "video/mp4",
+          seriesId: selectedSeriesId,
+          episodeNumber: parseInt(episodeNumber),
+          title: episodeTitle,
+          isFree,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Presigned URL авахад алдаа");
+      }
+
+      const { episodeId, presignedUrl, r2Key } = await res.json();
+
+      // 2. Upload file to R2 via presigned URL with progress
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            setProgress(Math.round((e.loaded / e.total) * 100));
+          }
+        });
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) resolve();
+          else reject(new Error("Upload амжилтгүй"));
+        });
+        xhr.addEventListener("error", () => reject(new Error("Сүлжээний алдаа")));
+        xhr.open("PUT", presignedUrl);
+        xhr.setRequestHeader("Content-Type", file.type || "video/mp4");
+        xhr.send(file);
+      });
+
+      // 3. Notify server upload is complete
+      await fetch("/api/upload", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ episodeId, r2Key }),
+      });
+
+      setDone(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Алдаа гарлаа");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const canSubmit = file && selectedSeriesId && episodeTitle && episodeNumber && !uploading && !done;
+
   return (
-    <MobileShell>
+    <CreatorShell>
       <div className="h-dvh w-full overflow-y-auto pb-20 hide-scrollbar">
         <div className="pt-[env(safe-area-inset-top)]">
           {/* Header */}
@@ -42,9 +129,17 @@ export default function UploadPage() {
 
           <div className="px-4 mt-4 space-y-5">
             {/* File upload area */}
-            {!uploading ? (
+            <input
+              ref={fileRef}
+              type="file"
+              accept="video/mp4,video/quicktime,video/webm"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+
+            {!file ? (
               <div
-                onClick={handleUpload}
+                onClick={handleFileSelect}
                 className="aspect-video rounded-xl bg-white/5 border-2 border-dashed border-white/15 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-white/10 hover:border-white/25 transition-all"
               >
                 <div className="w-14 h-14 rounded-full bg-blue-500/20 flex items-center justify-center">
@@ -52,59 +147,63 @@ export default function UploadPage() {
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-medium text-white/60">Видео файл сонгох</p>
-                  <p className="text-[10px] text-white/30 mt-1">MP4, MOV • 1080p хүртэл • 2GB хүртэл</p>
+                  <p className="text-[10px] text-white/30 mt-1">MP4, MOV, WebM • 2GB хүртэл</p>
+                </div>
+              </div>
+            ) : done ? (
+              <div className="aspect-video rounded-xl bg-white/5 border border-white/10 flex flex-col items-center justify-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <Check size={24} className="text-green-400" />
+                </div>
+                <p className="text-sm font-medium text-green-400">Upload амжилттай!</p>
+                <p className="text-[10px] text-white/30">{file.name} • {(file.size / 1024 / 1024).toFixed(0)}MB</p>
+              </div>
+            ) : uploading ? (
+              <div className="aspect-video rounded-xl bg-white/5 border border-white/10 flex flex-col items-center justify-center gap-3 relative overflow-hidden">
+                <Film size={32} className="text-blue-400 animate-pulse" />
+                <p className="text-sm font-medium">{progress}% upload хийж байна...</p>
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
+                  <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${progress}%` }} />
                 </div>
               </div>
             ) : (
-              <div className="aspect-video rounded-xl bg-white/5 border border-white/10 flex flex-col items-center justify-center gap-3 relative overflow-hidden">
-                {progress < 100 ? (
-                  <>
-                    <Film size={32} className="text-blue-400 animate-pulse" />
-                    <p className="text-sm font-medium">{Math.round(progress)}% upload хийж байна...</p>
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
-                      <div
-                        className="h-full bg-blue-500 transition-all duration-500"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                      <Check size={24} className="text-green-400" />
-                    </div>
-                    <p className="text-sm font-medium text-green-400">Upload амжилттай!</p>
-                    <p className="text-[10px] text-white/30">video_episode_01.mp4 • 245MB</p>
-                  </>
-                )}
+              <div
+                onClick={handleFileSelect}
+                className="aspect-video rounded-xl bg-white/5 border border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white/10 transition-all"
+              >
+                <Film size={28} className="text-blue-400" />
+                <p className="text-sm font-medium">{file.name}</p>
+                <p className="text-[10px] text-white/30">{(file.size / 1024 / 1024).toFixed(0)}MB • Дарж солих</p>
               </div>
             )}
 
             {/* Series selection */}
             <div>
               <p className="text-sm font-medium text-white/60 mb-2">Цуврал сонгох</p>
-              <button className="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                <span className={`text-sm ${selectedSeries ? "text-white" : "text-white/20"}`}>
-                  {selectedSeries || "Цуврал сонгоно уу"}
-                </span>
-                <ChevronDown size={16} className="text-white/30" />
-              </button>
-              {/* Quick select */}
-              <div className="flex gap-2 mt-2">
-                {["Хар шөнө", "Цагаан мөрөөдөл"].map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setSelectedSeries(s)}
-                    className={`text-xs px-3 py-1.5 rounded-full transition-all ${
-                      selectedSeries === s
-                        ? "bg-white text-black"
-                        : "bg-white/5 text-white/40 border border-white/10"
-                    }`}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
+              {series.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {series.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setSelectedSeriesId(s.id)}
+                      className={`text-xs px-3.5 py-2 rounded-full transition-all ${
+                        selectedSeriesId === s.id
+                          ? "bg-white text-black font-medium"
+                          : "bg-white/5 text-white/40 border border-white/10"
+                      }`}
+                    >
+                      {s.title}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 bg-white/5 rounded-xl">
+                  <p className="text-xs text-white/30 mb-2">Цуврал байхгүй</p>
+                  <Link href="/creator/series/new" className="text-xs text-blue-400 underline">
+                    Эхлээд цуврал үүсгэх
+                  </Link>
+                </div>
+              )}
             </div>
 
             {/* Episode info */}
@@ -143,9 +242,7 @@ export default function UploadPage() {
                   isFree ? "bg-green-500" : "bg-white/15"
                 }`}
               >
-                <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-all ${
-                  isFree ? "left-5.5 translate-x-0" : "left-0.5"
-                }`} style={{ left: isFree ? '22px' : '2px' }} />
+                <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-all`} style={{ left: isFree ? '22px' : '2px' }} />
               </button>
             </div>
 
@@ -157,19 +254,33 @@ export default function UploadPage() {
               </p>
             </div>
 
+            {/* Error */}
+            {error && <p className="text-xs text-red-400 text-center">{error}</p>}
+
             {/* Submit */}
-            <button
-              className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all ${
-                progress >= 100 && selectedSeries && episodeTitle
-                  ? "bg-white text-black hover:bg-white/90"
-                  : "bg-white/10 text-white/30 cursor-not-allowed"
-              }`}
-            >
-              Нийтлэх
-            </button>
+            {done ? (
+              <button
+                onClick={() => router.push("/creator")}
+                className="w-full py-3.5 rounded-xl bg-green-500 text-white font-semibold text-sm"
+              >
+                Самбар руу буцах →
+              </button>
+            ) : (
+              <button
+                onClick={handleUpload}
+                disabled={!canSubmit}
+                className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                  canSubmit
+                    ? "bg-white text-black hover:bg-white/90"
+                    : "bg-white/10 text-white/30 cursor-not-allowed"
+                }`}
+              >
+                {uploading ? <Loader2 size={16} className="animate-spin" /> : "Upload & Нийтлэх"}
+              </button>
+            )}
           </div>
         </div>
       </div>
-    </MobileShell>
+    </CreatorShell>
   );
 }

@@ -1,43 +1,30 @@
 import { getAllPublishedSeries } from "@/lib/actions/series";
-import { mockSeries, mockCreators, categories } from "@/lib/mock-data";
 import SearchFeed from "@/components/SearchFeed";
+
+const CATEGORIES = ["Бүгд", "Уран сайхан", "Романтик", "Комеди", "Аймшиг", "Адал явдал", "Гэмт хэрэг", "Түүх"];
 
 export default async function SearchPage() {
   const allSeries = await getAllPublishedSeries().catch(() => []);
-  const hasRealData = allSeries.length > 0;
 
-  const seriesList = hasRealData
-    ? allSeries.map((s: Record<string, unknown>) => ({
-        id: String(s.id),
-        title: String(s.title ?? ""),
-        creator: String((s.profiles as Record<string, unknown>)?.display_name ?? ""),
-        episodes: Number((s.episodes as { count: number }[])?.[0]?.count ?? 0),
-        category: String(s.category ?? ""),
-        rating: Number(s.rating ?? 0),
-        views: formatViews(Number(s.total_views ?? 0)),
-        gradient: String(s.gradient ?? "from-purple-800 to-indigo-900"),
-        coverUrl: s.cover_url ? String(s.cover_url) : undefined,
-      }))
-    : mockSeries.map((s) => ({
-        id: s.id,
-        title: s.title,
-        creator: s.creator,
-        episodes: s.episodes,
-        category: s.category,
-        rating: s.rating,
-        views: s.views,
-        gradient: s.gradient,
-      }));
+  const seriesList = allSeries.map((s: Record<string, unknown>) => ({
+    id: String(s.id),
+    title: String(s.title ?? ""),
+    creator: String((s.profiles as Record<string, unknown>)?.display_name ?? ""),
+    episodes: Number((s.episodes as { count: number }[])?.[0]?.count ?? 0),
+    category: String(s.category ?? ""),
+    rating: Number(s.rating ?? 0),
+    views: formatViews(Number(s.total_views ?? 0)),
+    gradient: String(s.gradient ?? "from-purple-800 to-indigo-900"),
+    coverUrl: s.cover_url ? String(s.cover_url) : undefined,
+  }));
 
-  const creatorsList = hasRealData
-    ? extractCreators(allSeries)
-    : mockCreators;
+  const creatorsList = extractCreators(allSeries);
 
   return (
     <SearchFeed
       seriesList={seriesList}
       creatorsList={creatorsList}
-      categories={categories}
+      categories={CATEGORIES}
     />
   );
 }

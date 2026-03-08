@@ -269,9 +269,12 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-              <button className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold px-8 py-3 rounded-full text-sm hover:brightness-110 transition-all inline-flex items-center gap-2">
-                Бүтээгч болох <ArrowRight size={16} />
-              </button>
+              <a
+                href="/auth/login"
+                className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold px-8 py-3 rounded-full text-sm hover:brightness-110 transition-all inline-flex items-center gap-2"
+              >
+                Бүтээгч нэвтрэх <ArrowRight size={16} />
+              </a>
             </div>
 
             {/* Creator stats cards */}

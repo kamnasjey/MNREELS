@@ -1,6 +1,5 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getCreatorSeries } from "@/lib/actions/series";
-import { mockSeries } from "@/lib/mock-data";
 import CreatorDashboardFeed from "@/components/CreatorDashboardFeed";
 
 const GRADIENTS = [
@@ -26,7 +25,6 @@ export default async function CreatorDashboard() {
     );
   }
 
-  // Check if user is creator
   const { data: profile } = await supabase
     .from("profiles")
     .select("is_creator")
@@ -43,66 +41,46 @@ export default async function CreatorDashboard() {
     );
   }
 
-  // Fetch creator's series
   const creatorSeries = await getCreatorSeries().catch(() => []);
-  const hasRealData = creatorSeries.length > 0;
 
-  // Fetch earnings
+  // Fetch earnings from tasalbar_transactions
   const { data: earnings } = await supabase
-    .from("transactions")
+    .from("tasalbar_transactions")
     .select("amount")
-    .eq("creator_id", user.id)
-    .eq("type", "episode_unlock");
+    .eq("user_id", user.id)
+    .eq("type", "creator_earning");
 
   const totalEarnings = (earnings ?? []).reduce(
     (sum: number, t: Record<string, unknown>) => sum + Number(t.amount ?? 0),
     0
   );
 
-  // Fetch follower count
   const { count: followerCount } = await supabase
     .from("follows")
     .select("*", { count: "exact", head: true })
     .eq("creator_id", user.id);
 
-  const series = hasRealData
-    ? creatorSeries.map((s: Record<string, unknown>, i: number) => ({
-        id: String(s.id),
-        title: String(s.title ?? ""),
-        episodes: Number((s.episodes as { count: number }[])?.[0]?.count ?? 0),
-        views: formatViews(Number(s.total_views ?? 0)),
-        gradient: GRADIENTS[i % GRADIENTS.length],
-        earnings: 0,
-        coverUrl: s.cover_url ? String(s.cover_url) : undefined,
-      }))
-    : mockSeries.slice(0, 3).map((s) => ({
-        id: s.id,
-        title: s.title,
-        episodes: s.episodes,
-        views: s.views,
-        gradient: s.gradient,
-        earnings: Number(s.views.replace("K", "")) * 17,
-        hasPending: s.id === "3",
-      }));
+  const series = creatorSeries.map((s: Record<string, unknown>, i: number) => ({
+    id: String(s.id),
+    title: String(s.title ?? ""),
+    episodes: Number((s.episodes as { count: number }[])?.[0]?.count ?? 0),
+    views: formatViews(Number(s.total_views ?? 0)),
+    gradient: GRADIENTS[i % GRADIENTS.length],
+    earnings: 0,
+    coverUrl: s.cover_url ? String(s.cover_url) : undefined,
+  }));
 
-  const stats = hasRealData
-    ? {
-        totalEarnings,
-        totalViews: formatViews(
-          creatorSeries.reduce(
-            (sum: number, s: Record<string, unknown>) => sum + Number(s.total_views ?? 0),
-            0
-          )
-        ),
-        weeklyGrowth: "+0",
-        followers: formatViews(followerCount ?? 0),
-      }
-    : {
-        totalEarnings: 4350,
-        totalViews: "89K",
-        weeklyGrowth: "+342",
-        followers: "12.5K",
-      };
+  const stats = {
+    totalEarnings,
+    totalViews: formatViews(
+      creatorSeries.reduce(
+        (sum: number, s: Record<string, unknown>) => sum + Number(s.total_views ?? 0),
+        0
+      )
+    ),
+    weeklyGrowth: "+0",
+    followers: formatViews(followerCount ?? 0),
+  };
 
   return (
     <CreatorDashboardFeed

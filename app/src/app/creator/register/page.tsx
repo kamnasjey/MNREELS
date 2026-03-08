@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ArrowLeft, User, Phone, Building2, CheckCircle2, Loader2 } from "lucide-react";
-import MobileShell from "@/components/MobileShell";
+import CreatorShell from "@/components/CreatorShell";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -57,7 +57,7 @@ export default function CreatorRegisterPage() {
 
   if (submitted) {
     return (
-      <MobileShell>
+      <CreatorShell>
         <div className="h-dvh w-full flex flex-col items-center justify-center px-6">
           <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mb-5">
             <CheckCircle2 size={40} className="text-green-400" />
@@ -67,18 +67,18 @@ export default function CreatorRegisterPage() {
             Та одоо контент оруулж орлого олох боломжтой боллоо
           </p>
           <button
-            onClick={() => router.push("/creator")}
+            onClick={() => window.location.href = "/creator"}
             className="w-full py-3.5 rounded-xl bg-white text-black font-semibold text-sm text-center"
           >
             Бүтээгчийн самбар руу очих →
           </button>
         </div>
-      </MobileShell>
+      </CreatorShell>
     );
   }
 
   return (
-    <MobileShell>
+    <CreatorShell>
       <div className="h-dvh w-full overflow-y-auto pb-20 hide-scrollbar">
         <div className="pt-[env(safe-area-inset-top)]">
           {/* Header */}
@@ -205,6 +205,6 @@ export default function CreatorRegisterPage() {
           </div>
         </div>
       </div>
-    </MobileShell>
+    </CreatorShell>
   );
 }

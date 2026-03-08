@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft, Plus, Upload, TrendingUp, Eye, Ticket, Clock, ChevronRight } from "lucide-react";
-import MobileShell from "@/components/MobileShell";
+import CreatorShell from "@/components/CreatorShell";
 import Link from "next/link";
 
 interface CreatorSeriesItem {
@@ -31,7 +31,7 @@ interface CreatorDashboardFeedProps {
 export default function CreatorDashboardFeed({ series, stats, isCreator }: CreatorDashboardFeedProps) {
   if (!isCreator) {
     return (
-      <MobileShell>
+      <CreatorShell>
         <div className="h-dvh w-full flex flex-col items-center justify-center px-8">
           <p className="text-4xl mb-4">🎬</p>
           <p className="text-sm text-white/50 text-center mb-4">
@@ -44,12 +44,12 @@ export default function CreatorDashboardFeed({ series, stats, isCreator }: Creat
             Бүртгүүлэх
           </Link>
         </div>
-      </MobileShell>
+      </CreatorShell>
     );
   }
 
   return (
-    <MobileShell>
+    <CreatorShell>
       <div className="h-dvh w-full overflow-y-auto pb-20 hide-scrollbar">
         <div className="pt-[env(safe-area-inset-top)]">
           {/* Header */}
@@ -175,6 +175,6 @@ export default function CreatorDashboardFeed({ series, stats, isCreator }: Creat
           </div>
         </div>
       </div>
-    </MobileShell>
+    </CreatorShell>
   );
 }

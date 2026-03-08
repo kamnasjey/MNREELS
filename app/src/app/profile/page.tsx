@@ -1,6 +1,5 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getFollowedCreators } from "@/lib/actions/series";
-import { mockSeries, mockCreators } from "@/lib/mock-data";
 import ProfileFeed from "@/components/ProfileFeed";
 
 const GRADIENTS = [
@@ -28,7 +27,6 @@ export default async function ProfilePage() {
     );
   }
 
-  // Fetch profile
   const { data: profile } = await supabase
     .from("profiles")
     .select("username, display_name, avatar_url, bio")
@@ -38,7 +36,6 @@ export default async function ProfilePage() {
   const displayName = profile?.display_name ?? user.email?.split("@")[0] ?? "User";
   const username = profile?.username ?? user.email?.split("@")[0] ?? "user";
 
-  // Fetch watch history + followed creators in parallel
   const [watchHistory, followedData] = await Promise.all([
     supabase
       .from("watch_history")
@@ -74,34 +71,16 @@ export default async function ProfilePage() {
     });
   }
 
-  const hasRealWatchData = watchedSeriesMap.size > 0;
-  const watchedSeries = hasRealWatchData
-    ? Array.from(watchedSeriesMap.values())
-    : mockSeries.map((s) => ({
-        id: s.id,
-        title: s.title,
-        creator: s.creator,
-        episodes: s.episodes,
-        category: s.category,
-        rating: s.rating,
-        gradient: s.gradient,
-        watchedEpisodes: 3,
-      }));
-
-  // Process followed creators
-  const hasRealFollowData = followedData.length > 0;
-  const followedCreators = hasRealFollowData
-    ? followedData.map((f: Record<string, unknown>) => {
-        const p = f.profiles as Record<string, unknown> | undefined;
-        return {
-          id: String(p?.id ?? f.creator_id),
-          name: String(p?.display_name ?? ""),
-          avatar: String(p?.display_name ?? "").slice(0, 2),
-          seriesCount: 0,
-          gradient: "from-purple-600 to-indigo-600",
-        };
-      })
-    : mockCreators.slice(0, 3);
+  const followedCreators = followedData.map((f: Record<string, unknown>) => {
+    const p = f.profiles as Record<string, unknown> | undefined;
+    return {
+      id: String(p?.id ?? f.creator_id),
+      name: String(p?.display_name ?? ""),
+      avatar: String(p?.display_name ?? "").slice(0, 2),
+      seriesCount: 0,
+      gradient: "from-purple-600 to-indigo-600",
+    };
+  });
 
   return (
     <ProfileFeed
@@ -109,10 +88,10 @@ export default async function ProfilePage() {
         username,
         displayName,
         avatarInitial: displayName.slice(0, 1).toUpperCase(),
-        bio: profile?.bio ?? "Кино үзэх дуртай",
-        followingCount: followedData.length || 12,
+        bio: profile?.bio ?? "",
+        followingCount: followedData.length,
       }}
-      watchedSeries={watchedSeries}
+      watchedSeries={Array.from(watchedSeriesMap.values())}
       followedCreators={followedCreators}
       followedSeries={[]}
       isLoggedIn={true}

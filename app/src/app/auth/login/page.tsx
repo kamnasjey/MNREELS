@@ -1,25 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Loader2, Play } from "lucide-react";
-import MobileShell from "@/components/MobileShell";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
-
-  // Desktop → landing page руу чиглүүлэх
-  useEffect(() => {
-    const ua = navigator.userAgent;
-    const isMobile =
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) ||
-      window.innerWidth < 768;
-    if (!isMobile) {
-      router.replace("/landing");
-    }
-  }, [router]);
 
   const supabase = createClient();
 
@@ -34,8 +20,7 @@ export default function LoginPage() {
   };
 
   return (
-    <MobileShell hideNav>
-      <div className="h-dvh w-full flex flex-col items-center justify-center px-6 relative overflow-hidden">
+    <div className="h-dvh w-full flex flex-col items-center justify-center px-6 relative overflow-hidden bg-black">
         {/* Animated gradient background */}
         <div className="absolute inset-0 -z-10">
           <div className="absolute top-[-30%] left-[-20%] w-[70%] h-[60%] rounded-full bg-red-600/30 blur-[100px] animate-pulse" />
@@ -58,7 +43,7 @@ export default function LoginPage() {
         <button
           onClick={signInWithGoogle}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-3 bg-white text-black py-4 rounded-2xl font-semibold text-sm transition-all hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-white/10"
+          className="w-full max-w-sm flex items-center justify-center gap-3 bg-white text-black py-4 rounded-2xl font-semibold text-sm transition-all hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-white/10"
         >
           {loading ? (
             <Loader2 size={18} className="animate-spin" />
@@ -87,6 +72,5 @@ export default function LoginPage() {
           )}
         </button>
       </div>
-    </MobileShell>
   );
 }
