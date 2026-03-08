@@ -4,6 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "MNREELS — Богино контент платформ",
   description: "Монголын анхны богино контент платформ. Бүтээгчид өөрсдийн контентийг төлбөртэйгээр хүртээнэ.",
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
