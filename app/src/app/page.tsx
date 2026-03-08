@@ -1,4 +1,4 @@
-import { getTrendingSeries, getNewSeries, getAllPublishedSeries, getContinueWatching } from "@/lib/actions/series";
+import { getAllPublishedSeries, getContinueWatching } from "@/lib/actions/series";
 import HomeFeed from "@/components/HomeFeed";
 import DeviceGate from "@/components/DeviceGate";
 
@@ -14,10 +14,9 @@ const GRADIENTS = [
 const CATEGORIES = ["Бүгд", "Уран сайхан", "Романтик", "Комеди", "Аймшиг", "Адал явдал", "Гэмт хэрэг", "Түүх"];
 
 export default async function HomePage() {
-  const [allSeries, trending, newSeries, continueWatchingRaw] = await Promise.all([
+  // Single query for all series, derive trending/new from it
+  const [allSeries, continueWatchingRaw] = await Promise.all([
     getAllPublishedSeries().catch(() => []),
-    getTrendingSeries().catch(() => []),
-    getNewSeries().catch(() => []),
     getContinueWatching().catch(() => []),
   ]);
 
@@ -36,6 +35,14 @@ export default async function HomePage() {
       coverUrl: s.cover_url ? String(s.cover_url) : undefined,
     }));
 
+  const mapped = mapSeries(allSeries);
+  // Derive trending (by views) and new (by position = newest first) from single query
+  const trendingList = [...mapped].sort((a, b) => {
+    const parseViews = (v: string) => v.endsWith("K") ? parseFloat(v) * 1000 : parseInt(v) || 0;
+    return parseViews(b.views) - parseViews(a.views);
+  }).slice(0, 10);
+  const newList = mapped.slice(0, 10);
+
   const continueWatching = continueWatchingRaw.map((item: Record<string, unknown>, i: number) => ({
     episodeId: String(item.episode_id ?? ""),
     seriesId: String(item.series_id ?? ""),
@@ -49,9 +56,9 @@ export default async function HomePage() {
   return (
     <DeviceGate>
       <HomeFeed
-        seriesList={mapSeries(allSeries)}
-        trendingList={mapSeries(trending)}
-        newList={mapSeries(newSeries)}
+        seriesList={mapped}
+        trendingList={trendingList}
+        newList={newList}
         categories={CATEGORIES}
         continueWatching={continueWatching.length > 0 ? continueWatching : undefined}
       />

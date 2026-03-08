@@ -1,5 +1,4 @@
 import { createServerSupabase } from "@/lib/supabase/server";
-import { getCreatorSeries } from "@/lib/actions/series";
 import CreatorDashboardFeed from "@/components/CreatorDashboardFeed";
 
 const GRADIENTS = [
@@ -15,15 +14,15 @@ export default async function CreatorDashboard() {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) {
-    return (
-      <CreatorDashboardFeed
-        series={[]}
-        stats={{ totalEarnings: 0, totalViews: "0", weeklyGrowth: "0", followers: "0" }}
-        isCreator={false}
-      />
-    );
-  }
+  const empty = (
+    <CreatorDashboardFeed
+      series={[]}
+      stats={{ totalEarnings: 0, totalViews: "0", weeklyGrowth: "0", followers: "0" }}
+      isCreator={false}
+    />
+  );
+
+  if (!user) return empty;
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -31,34 +30,31 @@ export default async function CreatorDashboard() {
     .eq("id", user.id)
     .single();
 
-  if (!profile?.is_creator) {
-    return (
-      <CreatorDashboardFeed
-        series={[]}
-        stats={{ totalEarnings: 0, totalViews: "0", weeklyGrowth: "0", followers: "0" }}
-        isCreator={false}
-      />
-    );
-  }
+  if (!profile?.is_creator) return empty;
 
-  const creatorSeries = await getCreatorSeries().catch(() => []);
+  // Run remaining queries in parallel
+  const [seriesResult, earningsResult, followersResult] = await Promise.all([
+    supabase
+      .from("series")
+      .select("id, title, total_views, cover_url, episodes(count)")
+      .eq("creator_id", user.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("tasalbar_transactions")
+      .select("amount")
+      .eq("user_id", user.id)
+      .eq("type", "creator_earning"),
+    supabase
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("creator_id", user.id),
+  ]);
 
-  // Fetch earnings from tasalbar_transactions
-  const { data: earnings } = await supabase
-    .from("tasalbar_transactions")
-    .select("amount")
-    .eq("user_id", user.id)
-    .eq("type", "creator_earning");
-
-  const totalEarnings = (earnings ?? []).reduce(
+  const creatorSeries = seriesResult.data ?? [];
+  const totalEarnings = (earningsResult.data ?? []).reduce(
     (sum: number, t: Record<string, unknown>) => sum + Number(t.amount ?? 0),
     0
   );
-
-  const { count: followerCount } = await supabase
-    .from("follows")
-    .select("*", { count: "exact", head: true })
-    .eq("creator_id", user.id);
 
   const series = creatorSeries.map((s: Record<string, unknown>, i: number) => ({
     id: String(s.id),
@@ -79,7 +75,7 @@ export default async function CreatorDashboard() {
       )
     ),
     weeklyGrowth: "+0",
-    followers: formatViews(followerCount ?? 0),
+    followers: formatViews(followersResult.count ?? 0),
   };
 
   return (

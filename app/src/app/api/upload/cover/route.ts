@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { r2Client, R2_BUCKET, R2_PUBLIC_URL } from "@/lib/r2";
+import { getPresignedPutUrl, R2_PUBLIC_URL } from "@/lib/r2";
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,15 +33,11 @@ export async function POST(request: NextRequest) {
     const ext = filename.split(".").pop() || "jpg";
     const r2Key = `covers/${seriesId || user.id}/${Date.now()}.${ext}`;
 
-    const command = new PutObjectCommand({
-      Bucket: R2_BUCKET,
-      Key: r2Key,
-      ContentType: contentType || "image/jpeg",
-    });
-
-    const presignedUrl = await getSignedUrl(r2Client, command, {
-      expiresIn: 600,
-    });
+    const presignedUrl = await getPresignedPutUrl(
+      r2Key,
+      contentType || "image/jpeg",
+      600
+    );
 
     return NextResponse.json({
       presignedUrl,

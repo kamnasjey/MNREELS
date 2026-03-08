@@ -1,5 +1,4 @@
 import { createServerSupabase } from "@/lib/supabase/server";
-import { getFollowedCreators } from "@/lib/actions/series";
 import ProfileFeed from "@/components/ProfileFeed";
 
 const GRADIENTS = [
@@ -36,51 +35,74 @@ export default async function ProfilePage() {
   const displayName = profile?.display_name ?? user.email?.split("@")[0] ?? "User";
   const username = profile?.username ?? user.email?.split("@")[0] ?? "user";
 
-  const [watchHistory, followedData] = await Promise.all([
-    supabase
-      .from("watch_history")
-      .select("episode_id, progress, completed, episodes:episode_id(id, series_id, series:series_id(id, title, category, cover_url, free_episodes))")
-      .eq("user_id", user.id)
-      .order("last_watched_at", { ascending: false })
-      .limit(20)
-      .then(({ data }) => data ?? []),
-    getFollowedCreators().catch(() => []),
-  ]);
+  // Simple watch history query - no nested joins
+  const { data: watchHistory } = await supabase
+    .from("watch_history")
+    .select("episode_id")
+    .eq("user_id", user.id)
+    .order("last_watched_at", { ascending: false })
+    .limit(20);
 
-  // Process watched series (deduplicate by series)
-  const watchedSeriesMap = new Map<string, { id: string; title: string; creator: string; episodes: number; category: string; rating: number; gradient: string; watchedEpisodes: number; coverUrl?: string }>();
-  for (const wh of watchHistory) {
-    const ep = wh.episodes as Record<string, unknown> | undefined;
-    const series = ep?.series as Record<string, unknown> | undefined;
-    if (!series) continue;
-    const seriesId = String(series.id);
-    if (watchedSeriesMap.has(seriesId)) {
-      watchedSeriesMap.get(seriesId)!.watchedEpisodes++;
-      continue;
+  // Get unique series from watched episodes
+  let watchedSeries: { id: string; title: string; creator: string; episodes: number; category: string; rating: number; gradient: string; watchedEpisodes: number; coverUrl?: string }[] = [];
+
+  if (watchHistory && watchHistory.length > 0) {
+    const episodeIds = watchHistory.map((wh) => wh.episode_id);
+    const { data: episodes } = await supabase
+      .from("episodes")
+      .select("id, series_id")
+      .in("id", episodeIds);
+
+    if (episodes && episodes.length > 0) {
+      const seriesIds = [...new Set(episodes.map((ep) => ep.series_id))];
+      const episodesPerSeries = new Map<string, number>();
+      for (const ep of episodes) {
+        episodesPerSeries.set(ep.series_id, (episodesPerSeries.get(ep.series_id) ?? 0) + 1);
+      }
+
+      const { data: seriesData } = await supabase
+        .from("series")
+        .select("id, title, category, cover_url")
+        .in("id", seriesIds);
+
+      watchedSeries = (seriesData ?? []).map((s, i) => ({
+        id: s.id,
+        title: s.title ?? "",
+        creator: "",
+        episodes: 0,
+        category: s.category ?? "",
+        rating: 0,
+        gradient: GRADIENTS[i % GRADIENTS.length],
+        watchedEpisodes: episodesPerSeries.get(s.id) ?? 1,
+        coverUrl: s.cover_url ?? undefined,
+      }));
     }
-    watchedSeriesMap.set(seriesId, {
-      id: seriesId,
-      title: String(series.title ?? ""),
-      creator: "",
-      episodes: 0,
-      category: String(series.category ?? ""),
-      rating: 0,
-      gradient: GRADIENTS[watchedSeriesMap.size % GRADIENTS.length],
-      watchedEpisodes: 1,
-      coverUrl: series.cover_url ? String(series.cover_url) : undefined,
-    });
   }
 
-  const followedCreators = followedData.map((f: Record<string, unknown>) => {
-    const p = f.profiles as Record<string, unknown> | undefined;
-    return {
-      id: String(p?.id ?? f.creator_id),
-      name: String(p?.display_name ?? ""),
-      avatar: String(p?.display_name ?? "").slice(0, 2),
+  // Followed creators - simple query
+  const { data: follows } = await supabase
+    .from("follows")
+    .select("creator_id")
+    .eq("user_id", user.id)
+    .not("creator_id", "is", null);
+
+  let followedCreators: { id: string; name: string; avatar: string; seriesCount: number; gradient: string }[] = [];
+
+  if (follows && follows.length > 0) {
+    const creatorIds = follows.map((f) => f.creator_id);
+    const { data: creators } = await supabase
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", creatorIds);
+
+    followedCreators = (creators ?? []).map((c) => ({
+      id: c.id,
+      name: c.display_name ?? "",
+      avatar: (c.display_name ?? "").slice(0, 2),
       seriesCount: 0,
       gradient: "from-purple-600 to-indigo-600",
-    };
-  });
+    }));
+  }
 
   return (
     <ProfileFeed
@@ -89,9 +111,9 @@ export default async function ProfilePage() {
         displayName,
         avatarInitial: displayName.slice(0, 1).toUpperCase(),
         bio: profile?.bio ?? "",
-        followingCount: followedData.length,
+        followingCount: follows?.length ?? 0,
       }}
-      watchedSeries={Array.from(watchedSeriesMap.values())}
+      watchedSeries={watchedSeries}
       followedCreators={followedCreators}
       followedSeries={[]}
       isLoggedIn={true}
