@@ -4,6 +4,7 @@
   "name": "mnreels",
   "compatibility_date": "2025-01-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "workers_dev": true,
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
@@ -17,6 +18,16 @@
     {
       "binding": "WORKER_SELF_REFERENCE",
       "service": "mnreels"
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "mnreels.online",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.mnreels.online",
+      "custom_domain": true
     }
   ]
 }

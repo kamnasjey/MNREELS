@@ -5,6 +5,7 @@ import { ArrowLeft, Upload, Film, Check, Loader2 } from "lucide-react";
 import CreatorShell from "@/components/CreatorShell";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getCreatorSeries } from "@/lib/actions/series";
 
 interface SeriesOption {
   id: string;
@@ -15,25 +16,31 @@ export default function UploadPage() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [series, setSeries] = useState<SeriesOption[]>([]);
+  const [loadingSeries, setLoadingSeries] = useState(true);
   const [selectedSeriesId, setSelectedSeriesId] = useState("");
   const [episodeTitle, setEpisodeTitle] = useState("");
   const [episodeNumber, setEpisodeNumber] = useState("");
   const [isFree, setIsFree] = useState(false);
+  const [tasalbarCost, setTasalbarCost] = useState("2");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
 
-  // Fetch creator's series
+  // Fetch creator's series via server action
   useEffect(() => {
-    fetch("/api/creator/series")
-      .then((r) => r.json())
+    getCreatorSeries()
       .then((data) => {
-        if (Array.isArray(data)) setSeries(data);
+        const list = (data ?? []).map((s: { id: string; title: string }) => ({
+          id: s.id,
+          title: s.title,
+        }));
+        setSeries(list);
+        if (list.length === 1) setSelectedSeriesId(list[0].id);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoadingSeries(false));
   }, []);
 
   const handleFileSelect = () => {
@@ -58,6 +65,18 @@ export default function UploadPage() {
     setProgress(0);
 
     try {
+      // Get video duration from file
+      const duration = await new Promise<number>((resolve) => {
+        const video = document.createElement("video");
+        video.preload = "metadata";
+        video.onloadedmetadata = () => {
+          resolve(Math.round(video.duration));
+          URL.revokeObjectURL(video.src);
+        };
+        video.onerror = () => resolve(0);
+        video.src = URL.createObjectURL(file);
+      });
+
       // 1. Get presigned URL from API
       const res = await fetch("/api/upload", {
         method: "POST",
@@ -69,6 +88,8 @@ export default function UploadPage() {
           episodeNumber: parseInt(episodeNumber),
           title: episodeTitle,
           isFree,
+          tasalbarCost: isFree ? 0 : Math.min(20, Math.max(1, parseInt(tasalbarCost) || 2)),
+          duration,
         }),
       });
 
@@ -180,7 +201,11 @@ export default function UploadPage() {
             {/* Series selection */}
             <div>
               <p className="text-sm font-medium text-white/60 mb-2">Цуврал сонгох</p>
-              {series.length > 0 ? (
+              {loadingSeries ? (
+                <div className="text-center py-4 bg-white/5 rounded-xl">
+                  <Loader2 size={16} className="animate-spin mx-auto text-white/30" />
+                </div>
+              ) : series.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {series.map((s) => (
                     <button
@@ -246,13 +271,39 @@ export default function UploadPage() {
               </button>
             </div>
 
-            {/* Info */}
-            <div className="bg-blue-500/10 rounded-xl p-3.5 border border-blue-500/20">
-              <p className="text-xs text-blue-300 leading-relaxed">
-                Upload хийсний дараа видео автомат transcode хийгдэж, 2 цагийн модерацид орно.
-                Admin зөвшөөрвөл эсвэл 2 цагийн дараа автомат нийтлэгдэнэ.
-              </p>
-            </div>
+            {/* Tasalbar price (only for paid episodes) */}
+            {!isFree && (
+              <div className="p-4 bg-white/5 rounded-xl">
+                <p className="text-sm font-medium mb-1">Тасалбар үнэ</p>
+                <p className="text-[10px] text-white/40 mb-3">1 тасалбар = 50₮ • 1-20 хооронд</p>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={1}
+                    max={20}
+                    value={parseInt(tasalbarCost) || 2}
+                    onChange={(e) => setTasalbarCost(e.target.value)}
+                    className="flex-1 accent-yellow-500"
+                  />
+                  <div className="w-20 text-center">
+                    <input
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={tasalbarCost}
+                      onChange={(e) => setTasalbarCost(e.target.value)}
+                      className="w-full bg-white/10 border border-white/20 rounded-lg px-2 py-1.5 text-center text-sm font-bold outline-none focus:border-yellow-500/50"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-white/30 mt-2 text-center">
+                  = <span className="text-yellow-400 font-medium">{((parseInt(tasalbarCost) || 2) * 50).toLocaleString()}₮</span>
+                  <span className="text-white/20"> • Таны орлого: </span>
+                  <span className="text-green-400 font-medium">{((parseInt(tasalbarCost) || 2) * 40).toLocaleString()}₮</span>
+                  <span className="text-white/20"> (80%)</span>
+                </p>
+              </div>
+            )}
 
             {/* Error */}
             {error && <p className="text-xs text-red-400 text-center">{error}</p>}

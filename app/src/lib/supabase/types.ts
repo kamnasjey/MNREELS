@@ -14,6 +14,7 @@ export type Database = {
           bio: string;
           is_creator: boolean;
           creator_verified: boolean;
+          is_admin: boolean;
           bank_name: string | null;
           bank_account: string | null;
           tasalbar_balance: number;
@@ -28,6 +29,8 @@ export type Database = {
           phone?: string | null;
           bio?: string;
           is_creator?: boolean;
+          creator_verified?: boolean;
+          is_admin?: boolean;
           bank_name?: string | null;
           bank_account?: string | null;
           tasalbar_balance?: number;

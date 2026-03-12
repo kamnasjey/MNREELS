@@ -9,12 +9,22 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createServerSupabase();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      // Desktop хэрэглэгчийг creator самбар руу чиглүүлэх
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error && data.session) {
+      // Update active_session_id for single-device enforcement
+      const sessionId = data.session.access_token.slice(-16);
+      await supabase
+        .from("profiles")
+        .update({ active_session_id: sessionId })
+        .eq("id", data.session.user.id);
+
+      // Desktop -> creator dashboard
       const headerList = await headers();
       const ua = headerList.get("user-agent") ?? "";
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+      const isMobile =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          ua
+        );
 
       if (!isMobile && next === "/") {
         return NextResponse.redirect(`${origin}/creator`);

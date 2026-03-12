@@ -5,7 +5,7 @@ import Hls from "hls.js";
 import { Play, Pause, Volume2, VolumeX, Maximize, Lock, Ticket } from "lucide-react";
 
 interface VideoPlayerProps {
-  src: string; // HLS manifest URL (.m3u8)
+  src: string; // HLS manifest URL (.m3u8) or direct MP4
   poster?: string;
   isLocked?: boolean;
   tasalbarCost?: number;
@@ -13,6 +13,7 @@ interface VideoPlayerProps {
   onProgress?: (seconds: number) => void;
   onEnded?: () => void;
   autoPlay?: boolean;
+  fullScreen?: boolean; // Fill entire parent container (for Reels-style)
 }
 
 export default function VideoPlayer({
@@ -24,6 +25,7 @@ export default function VideoPlayer({
   onProgress,
   onEnded,
   autoPlay = false,
+  fullScreen = false,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -34,16 +36,18 @@ export default function VideoPlayer({
   const [showControls, setShowControls] = useState(true);
   const controlsTimer = useRef<NodeJS.Timeout>(undefined);
 
-  // Initialize HLS
+  // Initialize video source (HLS or direct MP4)
   useEffect(() => {
     const video = videoRef.current;
     if (!video || isLocked) return;
 
-    if (Hls.isSupported()) {
+    const isHLS = src.includes(".m3u8");
+
+    if (isHLS && Hls.isSupported()) {
       const hls = new Hls({
         maxBufferLength: 30,
         maxMaxBufferLength: 60,
-        startLevel: -1, // auto quality
+        startLevel: -1,
       });
 
       hls.loadSource(src);
@@ -59,10 +63,18 @@ export default function VideoPlayer({
         hls.destroy();
         hlsRef.current = null;
       };
-    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+    } else if (isHLS && video.canPlayType("application/vnd.apple.mpegurl")) {
       // Safari native HLS
       video.src = src;
       if (autoPlay) video.play().catch(() => {});
+    } else {
+      // Direct MP4/WebM playback
+      video.src = src;
+      video.load();
+      if (autoPlay) video.play().catch(() => {});
+      return () => {
+        video.src = "";
+      };
     }
   }, [src, isLocked, autoPlay]);
 
@@ -141,13 +153,17 @@ export default function VideoPlayer({
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
+  const containerClass = fullScreen
+    ? "relative w-full h-full bg-black overflow-hidden select-none"
+    : "relative w-full aspect-video bg-black rounded-xl overflow-hidden select-none";
+
   // Locked state
   if (isLocked) {
     return (
-      <div className="relative w-full aspect-video bg-black/90 rounded-xl flex flex-col items-center justify-center">
+      <div className={`${containerClass} flex flex-col items-center justify-center`}>
         {poster && (
           <div
-            className="absolute inset-0 bg-cover bg-center rounded-xl opacity-30 blur-sm"
+            className="absolute inset-0 bg-cover bg-center opacity-30 blur-sm"
             style={{ backgroundImage: `url(${poster})` }}
           />
         )}
@@ -170,14 +186,14 @@ export default function VideoPlayer({
 
   return (
     <div
-      className="relative w-full aspect-video bg-black rounded-xl overflow-hidden select-none"
+      className={containerClass}
       onClick={showControlsTemporarily}
     >
       <video
         ref={videoRef}
         poster={poster}
         playsInline
-        className="w-full h-full object-contain"
+        className={`w-full h-full ${fullScreen ? "object-cover" : "object-contain"}`}
       />
 
       {/* Controls overlay */}

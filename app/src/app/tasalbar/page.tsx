@@ -6,25 +6,34 @@ export default async function TasalbarPage() {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return <TasalbarFeed balance={0} transactions={[]} isLoggedIn={false} />;
+    return <TasalbarFeed balance={0} transactions={[]} purchases={[]} isLoggedIn={false} paymentId={null} />;
   }
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("tasalbar_balance")
+    .select("tasalbar_balance, payment_id")
     .eq("id", user.id)
     .single();
 
   const balance = profile?.tasalbar_balance ?? 0;
+  const paymentId = profile?.payment_id ?? null;
 
-  const { data: txData } = await supabase
-    .from("tasalbar_transactions")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(20);
+  const [txResult, purchaseResult] = await Promise.all([
+    supabase
+      .from("tasalbar_transactions")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("tasalbar_purchases")
+      .select("id, tasalbar_amount, tugrug_amount, status, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(10),
+  ]);
 
-  const transactions = (txData ?? []).map((tx: Record<string, unknown>) => ({
+  const transactions = (txResult.data ?? []).map((tx: Record<string, unknown>) => ({
     id: String(tx.id),
     type: String(tx.type ?? "spend"),
     amount: Number(tx.amount ?? 0),
@@ -32,11 +41,21 @@ export default async function TasalbarPage() {
     time: formatTimeAgo(String(tx.created_at ?? "")),
   }));
 
+  const purchases = (purchaseResult.data ?? []).map((p: Record<string, unknown>) => ({
+    id: String(p.id),
+    tasalbar_amount: Number(p.tasalbar_amount ?? 0),
+    tugrug_amount: Number(p.tugrug_amount ?? 0),
+    status: String(p.status ?? "pending"),
+    created_at: String(p.created_at ?? ""),
+  }));
+
   return (
     <TasalbarFeed
       balance={balance}
       transactions={transactions}
+      purchases={purchases}
       isLoggedIn={true}
+      paymentId={paymentId}
     />
   );
 }

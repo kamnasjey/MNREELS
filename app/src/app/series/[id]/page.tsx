@@ -26,7 +26,8 @@ export default async function SeriesDetailPage({
     number: Number(ep.episode_number ?? i + 1),
     title: String(ep.title ?? `Анги ${i + 1}`),
     duration: formatDuration(Number(ep.duration_seconds ?? 0)),
-    isFree: i < Number(realData.free_episodes ?? 3),
+    isFree: Boolean(ep.is_free) || i < Number(realData.free_episodes ?? 3),
+    tasalbarCost: Number(ep.tasalbar_cost ?? 2),
     views: formatViews(Number(ep.view_count ?? 0)),
   }));
 
@@ -59,6 +60,7 @@ export default async function SeriesDetailPage({
         freeEpisodes: Number(realData.free_episodes ?? 3),
         coverUrl: realData.cover_url ? String(realData.cover_url) : undefined,
         description: realData.description ? String(realData.description) : undefined,
+        bundlePrice: realData.bundle_price ? Number(realData.bundle_price) : undefined,
       }}
       episodes={episodes}
       initialFollowing={isFollowing}

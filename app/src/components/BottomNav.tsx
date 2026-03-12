@@ -2,12 +2,12 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Home, Search, Ticket, User } from "lucide-react";
+import { Home, Search, User, Users } from "lucide-react";
 
 const tabs = [
   { href: "/", icon: Home, label: "Нүүр" },
   { href: "/search", icon: Search, label: "Хайх" },
-  { href: "/tasalbar", icon: Ticket, label: "Тасалбар" },
+  { href: "/following", icon: Users, label: "Дагсан" },
   { href: "/profile", icon: User, label: "Профайл" },
 ];
 
@@ -27,7 +27,7 @@ export default function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex flex-col items-center gap-0.5 px-4 py-2 transition-colors ${
+              className={`flex flex-col items-center gap-0.5 px-3 py-2 transition-colors ${
                 isActive ? "text-white" : "text-white/40"
               }`}
             >
@@ -37,7 +37,6 @@ export default function BottomNav() {
           );
         })}
       </div>
-      {/* Safe area for phones with home indicator */}
       <div className="h-[env(safe-area-inset-bottom)]" />
     </nav>
   );

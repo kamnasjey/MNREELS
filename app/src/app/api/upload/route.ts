@@ -28,8 +28,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Not a creator" }, { status: 403 });
     }
 
-    const { filename, contentType, seriesId, episodeNumber, title, isFree } =
+    const { filename, contentType, seriesId, episodeNumber, title, isFree, tasalbarCost, duration } =
       await request.json();
+
+    // Clamp tasalbar cost to 1-20
+    const cost = isFree ? 0 : Math.min(20, Math.max(1, tasalbarCost || 2));
 
     const { data: episode, error } = await supabase
       .from("episodes")
@@ -38,6 +41,8 @@ export async function POST(request: NextRequest) {
         episode_number: episodeNumber,
         title,
         is_free: isFree,
+        tasalbar_cost: cost,
+        duration: duration || 0,
         status: "processing",
       })
       .select()

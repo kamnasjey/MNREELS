@@ -1,21 +1,17 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { ArrowLeft, Image, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, Image, Loader2 } from "lucide-react";
 import CreatorShell from "@/components/CreatorShell";
 import Link from "next/link";
 import { createSeries } from "@/lib/actions/series";
 import { useRouter } from "next/navigation";
-
-const CATEGORIES = ["Уран сайхан", "Романтик", "Комеди", "Аймшиг", "Адал явдал", "Гэмт хэрэг", "Түүх"];
 
 export default function NewSeriesPage() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
-  const [ageRating, setAgeRating] = useState("Бүгд");
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState("");
   const [saving, setSaving] = useState(false);
@@ -34,7 +30,7 @@ export default function NewSeriesPage() {
   };
 
   const handleSubmit = async () => {
-    if (!title || !category || saving) return;
+    if (!title || saving) return;
     setSaving(true);
     setError("");
 
@@ -68,13 +64,17 @@ export default function NewSeriesPage() {
       }
 
       // Create series in Supabase
-      await createSeries({
+      const result = await createSeries({
         title,
         description,
-        category,
-        ageRating,
+        category: "Бусад",
+        ageRating: "All",
         coverUrl,
       });
+
+      if (!result.success) {
+        throw new Error(result.error || "Цуврал үүсгэхэд алдаа");
+      }
 
       router.push("/creator");
     } catch (err) {
@@ -83,7 +83,7 @@ export default function NewSeriesPage() {
     }
   };
 
-  const canSubmit = title && category && !saving;
+  const canSubmit = title && !saving;
 
   return (
     <CreatorShell>
@@ -152,46 +152,6 @@ export default function NewSeriesPage() {
                 rows={3}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm placeholder:text-white/20 outline-none focus:border-white/30 transition-colors resize-none"
               />
-            </div>
-
-            {/* Category */}
-            <div>
-              <p className="text-sm font-medium text-white/60 mb-2">Ангилал</p>
-              <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setCategory(cat)}
-                    className={`text-xs font-medium px-3.5 py-2 rounded-full transition-all ${
-                      category === cat
-                        ? "bg-white text-black"
-                        : "bg-white/5 text-white/50 border border-white/10"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Age rating */}
-            <div>
-              <p className="text-sm font-medium text-white/60 mb-2">Насны зэрэглэл</p>
-              <div className="flex gap-2">
-                {["Бүгд", "13+", "16+", "18+"].map((age) => (
-                  <button
-                    key={age}
-                    onClick={() => setAgeRating(age)}
-                    className={`flex-1 text-xs font-medium py-2.5 rounded-xl transition-all ${
-                      ageRating === age
-                        ? "bg-white text-black"
-                        : "bg-white/5 text-white/50 border border-white/10"
-                    }`}
-                  >
-                    {age}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {/* Error */}

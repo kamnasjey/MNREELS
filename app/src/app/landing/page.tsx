@@ -1,10 +1,9 @@
 "use client";
 
-import { Smartphone, Film, Users, Play, ArrowRight, Star, Zap, Shield, TrendingUp } from "lucide-react";
+import { Smartphone, Film, Play, ArrowRight, Zap, Shield, TrendingUp } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-import { mockSeries } from "@/lib/mock-data";
 
-const APP_URL = "https://mnreels.kamnasjey.workers.dev";
+const APP_URL = "https://mnreels.online";
 
 export default function LandingPage() {
   return (
@@ -22,12 +21,6 @@ export default function LandingPage() {
             <a href="#about" className="text-sm text-white/50 hover:text-white transition-colors">Тухай</a>
             <a href="#creator" className="text-sm text-white/50 hover:text-white transition-colors">Бүтээгч</a>
             <a href="#faq" className="text-sm text-white/50 hover:text-white transition-colors">FAQ</a>
-            <a
-              href={APP_URL + "?mobile=true"}
-              className="text-sm bg-white text-black font-semibold px-4 py-2 rounded-full hover:bg-white/90 transition-colors"
-            >
-              Апп нээх
-            </a>
           </div>
         </div>
       </nav>
@@ -79,7 +72,7 @@ export default function LandingPage() {
               </div>
               <div>
                 <p className="text-sm text-white/40 mb-2">Утсаараа QR уншуулна уу</p>
-                <p className="text-2xl font-black text-white mb-1">mnreels.mn</p>
+                <p className="text-2xl font-black text-white mb-1">mnreels.online</p>
                 <p className="text-xs text-white/30">iOS & Android — Бүх утсанд</p>
               </div>
             </div>
@@ -117,12 +110,6 @@ export default function LandingPage() {
                     <div className="absolute right-4 bottom-24 flex flex-col gap-5 items-center">
                       <div className="flex flex-col items-center gap-1">
                         <div className="w-9 h-9 rounded-full bg-white/15 backdrop-blur flex items-center justify-center">
-                          <span className="text-sm">❤️</span>
-                        </div>
-                        <span className="text-[9px] text-white/50">2.4K</span>
-                      </div>
-                      <div className="flex flex-col items-center gap-1">
-                        <div className="w-9 h-9 rounded-full bg-white/15 backdrop-blur flex items-center justify-center">
                           <span className="text-sm">💬</span>
                         </div>
                         <span className="text-[9px] text-white/50">89</span>
@@ -157,8 +144,8 @@ export default function LandingPage() {
                       <span className="text-[8px] text-white/40">Хайх</span>
                     </div>
                     <div className="flex flex-col items-center gap-0.5">
-                      <div className="w-5 h-5 rounded bg-yellow-400/30" />
-                      <span className="text-[8px] text-white/40">Тасалбар</span>
+                      <div className="w-5 h-5 rounded bg-white/20" />
+                      <span className="text-[8px] text-white/40">Дагсан</span>
                     </div>
                     <div className="flex flex-col items-center gap-0.5">
                       <div className="w-5 h-5 rounded bg-white/20" />
@@ -171,28 +158,6 @@ export default function LandingPage() {
                 <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-24 h-1 bg-white/20 rounded-full" />
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats */}
-      <section className="relative border-y border-white/5">
-        <div className="max-w-6xl mx-auto px-6 py-16">
-          <div className="grid grid-cols-4 gap-8">
-            {[
-              { icon: Film, value: "500+", label: "Контент", color: "text-red-400" },
-              { icon: Users, value: "100+", label: "Бүтээгч", color: "text-purple-400" },
-              { icon: Play, value: "50K+", label: "Нийт үзэлт", color: "text-blue-400" },
-              { icon: Zap, value: "24/7", label: "Хаанаас ч", color: "text-yellow-400" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center group">
-                <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center mx-auto mb-4 group-hover:border-white/10 transition-colors">
-                  <stat.icon size={22} className={stat.color} />
-                </div>
-                <p className="text-3xl font-black mb-1">{stat.value}</p>
-                <p className="text-sm text-white/40">{stat.label}</p>
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -298,38 +263,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Trending preview */}
-      <section className="border-t border-white/5">
-        <div className="max-w-6xl mx-auto px-6 py-20">
-          <div className="text-center mb-10">
-            <p className="text-sm text-red-400 font-medium mb-3">Trending</p>
-            <h3 className="text-3xl font-black">Одоо үзэж байгаа</h3>
-          </div>
-          <div className="flex justify-center gap-5">
-            {mockSeries.slice(0, 5).map((series, i) => (
-              <div
-                key={series.id}
-                className={`w-40 h-56 rounded-2xl bg-gradient-to-br ${series.gradient} flex flex-col justify-end p-4 relative overflow-hidden group cursor-pointer transition-transform hover:scale-105 hover:-translate-y-1`}
-                style={{ animationDelay: `${i * 100}ms` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                <div className="absolute top-3 right-3 flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5">
-                  <Star size={10} className="text-yellow-400" fill="currentColor" />
-                  <span className="text-[10px] font-medium">{series.rating}</span>
-                </div>
-                <div className="relative z-10">
-                  <p className="font-bold text-sm mb-0.5">{series.title}</p>
-                  <p className="text-[10px] text-white/50">{series.episodes} анги</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="text-center mt-10">
-            <p className="text-sm text-white/30">Утсаараа нээж бүгдийг үзээрэй</p>
-          </div>
-        </div>
-      </section>
-
       {/* CTA - Download section */}
       <section className="border-t border-white/5">
         <div className="max-w-6xl mx-auto px-6 py-24">
@@ -351,7 +284,7 @@ export default function LandingPage() {
                   />
                 </div>
                 <div className="text-left">
-                  <p className="text-3xl font-black mb-2">mnreels.mn</p>
+                  <p className="text-3xl font-black mb-2">mnreels.online</p>
                   <p className="text-sm text-white/40 mb-4">Утсаараа QR уншуулна уу</p>
                   <div className="flex items-center gap-2 text-xs text-white/30">
                     <Smartphone size={14} />

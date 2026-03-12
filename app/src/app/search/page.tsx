@@ -1,61 +1,66 @@
+import { createServerSupabase } from "@/lib/supabase/server";
 import { getAllPublishedSeries } from "@/lib/actions/series";
 import SearchFeed from "@/components/SearchFeed";
 
-const CATEGORIES = ["Бүгд", "Уран сайхан", "Романтик", "Комеди", "Аймшиг", "Адал явдал", "Гэмт хэрэг", "Түүх"];
+const GRADIENTS = [
+  "from-purple-800 to-indigo-900",
+  "from-cyan-800 to-teal-900",
+  "from-red-800 to-rose-900",
+  "from-amber-800 to-yellow-900",
+  "from-pink-800 to-fuchsia-900",
+  "from-emerald-800 to-green-900",
+];
 
 export default async function SearchPage() {
-  const allSeries = await getAllPublishedSeries().catch(() => []);
+  const allSeries = await getAllPublishedSeries();
+  const supabase = await createServerSupabase();
 
-  const seriesList = allSeries.map((s: Record<string, unknown>) => ({
-    id: String(s.id),
-    title: String(s.title ?? ""),
-    creator: String((s.profiles as Record<string, unknown>)?.display_name ?? ""),
-    episodes: Number((s.episodes as { count: number }[])?.[0]?.count ?? 0),
-    category: String(s.category ?? ""),
-    rating: Number(s.rating ?? 0),
-    views: formatViews(Number(s.total_views ?? 0)),
-    gradient: String(s.gradient ?? "from-purple-800 to-indigo-900"),
-    coverUrl: s.cover_url ? String(s.cover_url) : undefined,
-  }));
+  // Dynamic categories from published series
+  const { data: catData } = await supabase
+    .from("series")
+    .select("category")
+    .eq("is_published", true);
 
-  const creatorsList = extractCreators(allSeries);
+  const uniqueCategories = ["Бүгд", ...new Set((catData ?? []).map(c => c.category).filter(Boolean))];
+
+  const seriesList = allSeries.map((s: Record<string, unknown>, i: number) => {
+    const profile = s.profiles as Record<string, unknown> | undefined;
+    return {
+      id: String(s.id),
+      title: String(s.title ?? ""),
+      creator: String(profile?.display_name ?? ""),
+      creatorId: String(s.creator_id ?? ""),
+      episodes: Array.isArray(s.episodes) ? (s.episodes[0] as Record<string, number>)?.count ?? 0 : 0,
+      category: String(s.category ?? ""),
+      rating: Number(s.rating ?? 0),
+      gradient: GRADIENTS[i % GRADIENTS.length],
+      coverUrl: s.cover_url ? String(s.cover_url) : undefined,
+    };
+  });
+
+  // Extract unique creators
+  const creatorMap = new Map<string, { id: string; name: string; avatar: string; seriesCount: number; gradient: string }>();
+  for (const s of seriesList) {
+    if (!s.creatorId) continue;
+    const existing = creatorMap.get(s.creatorId);
+    if (existing) {
+      existing.seriesCount++;
+    } else {
+      creatorMap.set(s.creatorId, {
+        id: s.creatorId,
+        name: s.creator,
+        avatar: s.creator.slice(0, 2),
+        seriesCount: 1,
+        gradient: GRADIENTS[creatorMap.size % GRADIENTS.length],
+      });
+    }
+  }
 
   return (
     <SearchFeed
       seriesList={seriesList}
-      creatorsList={creatorsList}
-      categories={CATEGORIES}
+      creatorsList={Array.from(creatorMap.values())}
+      categories={uniqueCategories}
     />
   );
-}
-
-function formatViews(n: number): string {
-  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "K";
-  return String(n);
-}
-
-function extractCreators(seriesData: Record<string, unknown>[]) {
-  const creatorMap = new Map<string, { id: string; name: string; avatar: string; seriesCount: number; followers: string; gradient: string }>();
-
-  for (const s of seriesData) {
-    const profile = s.profiles as Record<string, unknown> | undefined;
-    const creatorId = String(s.creator_id ?? "");
-    if (!creatorId || creatorMap.has(creatorId)) {
-      if (creatorMap.has(creatorId)) {
-        creatorMap.get(creatorId)!.seriesCount++;
-      }
-      continue;
-    }
-    const name = String(profile?.display_name ?? "");
-    creatorMap.set(creatorId, {
-      id: creatorId,
-      name,
-      avatar: name.slice(0, 2),
-      seriesCount: 1,
-      followers: "0",
-      gradient: "from-purple-600 to-indigo-600",
-    });
-  }
-
-  return Array.from(creatorMap.values());
 }
