@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
-import Hls from "hls.js";
+import type HlsType from "hls.js";
 import { Play, Pause, Lock, Ticket, Volume2, VolumeX, RotateCcw, RotateCw } from "lucide-react";
 
 interface VideoPlayerProps {
@@ -30,7 +30,7 @@ export default function VideoPlayer({
   loop: loopVideo = true,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const hlsRef = useRef<Hls | null>(null);
+  const hlsRef = useRef<HlsType | null>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -86,25 +86,30 @@ export default function VideoPlayer({
     loadingTimeoutRef.current = setTimeout(() => setLoading(false), 2000);
     const isHLS = src.includes(".m3u8");
 
-    if (isHLS && Hls.isSupported()) {
-      const hls = new Hls({
-        maxBufferLength: 30,
-        maxMaxBufferLength: 60,
-        startLevel: -1,
+    if (isHLS) {
+      // Dynamic import — HLS.js (~150KB) зөвхөн хэрэгтэй үед ачаална
+      import("hls.js").then(({ default: Hls }) => {
+        if (Hls.isSupported()) {
+          const hls = new Hls({
+            maxBufferLength: 15,
+            maxMaxBufferLength: 30,
+            startLevel: 0, // Хамгийн бага чанараас эхэлнэ → хурдан first frame
+          });
+          hls.loadSource(src);
+          hls.attachMedia(video);
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            if (autoPlay) tryAutoplay(video);
+          });
+          hlsRef.current = hls;
+        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          // Safari native HLS
+          video.src = src;
+          if (autoPlay) tryAutoplay(video);
+        }
       });
-      hls.loadSource(src);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        if (autoPlay) tryAutoplay(video);
-      });
-      hlsRef.current = hls;
-      return () => { hls.destroy(); hlsRef.current = null; };
-    } else if (isHLS && video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = src;
-      if (autoPlay) tryAutoplay(video);
+      return () => { if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; } };
     } else {
       video.src = src;
-      // Don't call video.load() — setting src already triggers loading
       if (autoPlay) tryAutoplay(video);
       return () => { video.src = ""; };
     }
@@ -309,7 +314,7 @@ export default function VideoPlayer({
         ref={videoRef}
         poster={poster}
         playsInline
-        preload="auto"
+        preload={autoPlay ? "auto" : "metadata"}
         className={`w-full h-full ${fullScreen ? "object-contain" : "object-contain"} touch-pan-y`}
         style={{ backgroundColor: "#000" }}
       />

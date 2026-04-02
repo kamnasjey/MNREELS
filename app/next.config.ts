@@ -15,6 +15,20 @@ const nextConfig: NextConfig = {
           { key: "Cross-Origin-Embedder-Policy", value: "require-corp" },
         ],
       },
+      // Static assets — 1 жил cache
+      {
+        source: "/:path*.(js|css|woff2|woff|ttf|ico|svg|png|jpg|webp)",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      // HTML pages — 1 цаг cache + stale-while-revalidate
+      {
+        source: "/((?!api|_next).*)",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=60, stale-while-revalidate=3600" },
+        ],
+      },
     ];
   },
 };

@@ -267,8 +267,8 @@ function EpisodeSlide({
             fullScreen
             loop={!isLast}
           />
-        ) : isNext && !isLocked && episode.videoUrl ? (
-          /* Далд preload: дараагийн ангийн metadata-г урьдчилж татна */
+        ) : isNext && episode.videoUrl ? (
+          /* Далд preload: дараагийн ангийн metadata-г урьдчилж татна (locked ч гэсэн) */
           <video
             src={episode.videoUrl}
             preload="metadata"
