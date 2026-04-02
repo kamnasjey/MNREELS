@@ -19,18 +19,26 @@ export default async function CreatorSeriesDetailPage({ params }: { params: Prom
 
   if (!series) redirect("/creator");
 
-  // Get all episodes (all statuses for creator view)
-  const { data: episodes } = await supabase
-    .from("episodes")
-    .select("id, title, episode_number, status, views, is_free, tasalbar_cost, video_url, created_at, published_at")
-    .eq("series_id", id)
-    .order("episode_number", { ascending: true });
-
-  // Get earnings for this series
-  const { data: earnings } = await supabase
-    .from("creator_earnings")
-    .select("creator_share, episode_id")
-    .eq("creator_id", user.id);
+  // Fetch episodes, earnings, and follow count in parallel
+  const [
+    { data: episodes },
+    { data: earnings },
+    { count: followCount },
+  ] = await Promise.all([
+    supabase
+      .from("episodes")
+      .select("id, title, episode_number, status, views, is_free, tasalbar_cost, video_url, created_at, published_at")
+      .eq("series_id", id)
+      .order("episode_number", { ascending: true }),
+    supabase
+      .from("creator_earnings")
+      .select("creator_share, episode_id")
+      .eq("creator_id", user.id),
+    supabase
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("creator_id", user.id),
+  ]);
 
   const episodeIds = new Set((episodes ?? []).map((e) => e.id));
   const earningsPerEpisode = new Map<string, number>();
@@ -41,12 +49,6 @@ export default async function CreatorSeriesDetailPage({ params }: { params: Prom
       totalSeriesEarnings += e.creator_share;
     }
   }
-
-  // Get follow count for this series
-  const { count: followCount } = await supabase
-    .from("follows")
-    .select("*", { count: "exact", head: true })
-    .eq("series_id", id);
 
   const totalViews = (episodes ?? []).reduce((sum, ep) => sum + (ep.views ?? 0), 0);
 

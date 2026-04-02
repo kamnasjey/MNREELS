@@ -1,6 +1,16 @@
 "use server";
 
 import { createServerSupabase } from "@/lib/supabase/server";
+import { SupabaseClient } from "@supabase/supabase-js";
+
+async function safeIncrementBalance(supabase: SupabaseClient, userId: string, amount: number) {
+  const { error } = await supabase.rpc("increment_balance", { user_id: userId, amount });
+  if (error) {
+    const { data: profile } = await supabase.from("profiles").select("tasalbar_balance").eq("id", userId).single();
+    const { error: directErr } = await supabase.from("profiles").update({ tasalbar_balance: (profile?.tasalbar_balance ?? 0) + amount }).eq("id", userId);
+    if (directErr) throw new Error("Үлдэгдэл шинэчлэхэд алдаа: " + directErr.message);
+  }
+}
 
 export async function registerAsCreator(formData: {
   displayName: string;
@@ -98,10 +108,7 @@ export async function requestWithdrawal(amount: number) {
   if (error) throw new Error("Хүсэлт илгээхэд алдаа");
 
   // Deduct balance
-  await supabase.rpc("increment_balance", {
-    user_id: user.id,
-    amount: -amount,
-  });
+  await safeIncrementBalance(supabase, user.id, -amount);
 
   // Record transaction
   await supabase.from("tasalbar_transactions").insert({

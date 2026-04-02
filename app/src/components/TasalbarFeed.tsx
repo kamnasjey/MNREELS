@@ -1,20 +1,12 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Ticket, ArrowDownLeft, ArrowUpRight, X, Loader2, Copy, Check, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Ticket, ArrowDownLeft, ArrowUpRight, Clock, CheckCircle, XCircle } from "lucide-react";
 import MobileShell from "@/components/MobileShell";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createManualPurchase } from "@/lib/actions/tasalbar";
-
-// Bank details
-const BANK_NAME = "Хаан банк";
-const BANK_ACCOUNT = "5013221055";
-const BANK_ACCOUNT_NAME = "Зоригт Ариунжаргал";
-const BANK_IBAN = "85000500";
-
-// 1 тасалбар = 50₮
-const PRICE_PER_TASALBAR = 50;
-const MIN_TASALBAR = 100;
+import { PRICE_PER_TASALBAR, MIN_TASALBAR } from "@/lib/constants/packages";
+import BankTransferModal from "@/components/shared/BankTransferModal";
 
 interface Transaction {
   id: string;
@@ -48,12 +40,10 @@ interface SelectedPurchase {
 }
 
 export default function TasalbarFeed({ balance, transactions, purchases, isLoggedIn, paymentId }: TasalbarFeedProps) {
+  const router = useRouter();
   const [selectedPurchase, setSelectedPurchase] = useState<SelectedPurchase | null>(null);
   const [customAmount, setCustomAmount] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const handleCustomBuy = useCallback(() => {
     const num = parseInt(customAmount);
@@ -66,32 +56,7 @@ export default function TasalbarFeed({ balance, transactions, purchases, isLogge
       priceMNT: price,
     });
     setError(null);
-    setSuccess(false);
   }, [customAmount]);
-
-  const handleCopy = useCallback((text: string, field: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedField(field);
-    setTimeout(() => setCopiedField(null), 2000);
-  }, []);
-
-  const handleSubmitPurchase = useCallback(async () => {
-    if (!selectedPurchase) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await createManualPurchase(selectedPurchase.id, selectedPurchase.amount, selectedPurchase.priceMNT);
-      if (!result.success) {
-        setError(result.error || "Алдаа гарлаа");
-      } else {
-        setSuccess(true);
-      }
-    } catch {
-      setError("Алдаа гарлаа");
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedPurchase]);
 
   if (!isLoggedIn) {
     return (
@@ -246,157 +211,12 @@ export default function TasalbarFeed({ balance, transactions, purchases, isLogge
 
       {/* Bank Transfer Payment Modal */}
       {selectedPurchase && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-zinc-900 rounded-t-2xl sm:rounded-2xl w-full max-w-sm sm:mx-6 relative max-h-[90dvh] overflow-y-auto">
-            <div className="sticky top-0 bg-zinc-900 z-10 p-4 pb-0 flex items-center justify-between">
-              <h3 className="font-bold text-lg">Төлбөр төлөх</h3>
-              <button
-                onClick={() => { setSelectedPurchase(null); setSuccess(false); }}
-                className="text-white/40 hover:text-white p-1"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="p-4">
-              {success ? (
-                <div className="text-center py-6">
-                  <CheckCircle size={48} className="text-green-400 mx-auto mb-3" />
-                  <h4 className="font-bold text-lg">Хүсэлт илгээгдлээ!</h4>
-                  <p className="text-sm text-white/50 mt-2">
-                    Банкны шилжүүлэг хийсний дараа админ баталгаажуулахад таны тасалбар орно.
-                  </p>
-                  <button
-                    onClick={() => { setSelectedPurchase(null); setSuccess(false); window.location.reload(); }}
-                    className="mt-4 bg-white text-black font-semibold text-sm px-6 py-2.5 rounded-xl"
-                  >
-                    Ойлголоо
-                  </button>
-                </div>
-              ) : (
-                <>
-                  {/* Purchase summary */}
-                  <div className="p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 mb-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-bold text-sm">{selectedPurchase.name}</p>
-                        <p className="text-xs text-white/40 mt-0.5">
-                          {selectedPurchase.amount} тасалбар
-                        </p>
-                      </div>
-                      <span className="font-black text-lg text-yellow-400">{selectedPurchase.priceMNT.toLocaleString()}₮</span>
-                    </div>
-                  </div>
-
-                  {/* Bank details */}
-                  <div className="space-y-3">
-                    <p className="text-xs text-white/50 font-medium uppercase tracking-wider">Дансны мэдээлэл</p>
-
-                    <div className="p-3 rounded-xl bg-white/5 space-y-2.5">
-                      <div>
-                        <p className="text-[10px] text-white/30">Банк</p>
-                        <p className="text-sm font-medium">{BANK_NAME}</p>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-[10px] text-white/30">Дансны дугаар</p>
-                          <p className="text-sm font-mono font-medium">{BANK_ACCOUNT}</p>
-                        </div>
-                        <button
-                          onClick={() => handleCopy(BANK_ACCOUNT, "account")}
-                          className="text-white/40 hover:text-white p-1.5 rounded-lg bg-white/5"
-                        >
-                          {copiedField === "account" ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
-                        </button>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-[10px] text-white/30">Дансны нэр</p>
-                          <p className="text-sm font-medium">{BANK_ACCOUNT_NAME}</p>
-                        </div>
-                        <button
-                          onClick={() => handleCopy(BANK_ACCOUNT_NAME, "name")}
-                          className="text-white/40 hover:text-white p-1.5 rounded-lg bg-white/5"
-                        >
-                          {copiedField === "name" ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
-                        </button>
-                      </div>
-
-                      {BANK_IBAN && (
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-[10px] text-white/30">IBAN</p>
-                            <p className="text-sm font-mono font-medium">{BANK_IBAN}</p>
-                          </div>
-                          <button
-                            onClick={() => handleCopy(BANK_IBAN, "iban")}
-                            className="text-white/40 hover:text-white p-1.5 rounded-lg bg-white/5"
-                          >
-                            {copiedField === "iban" ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Transfer description */}
-                    <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                      <p className="text-[10px] text-white/30 mb-1">Гүйлгээний утга (заавал бичнэ!)</p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-base font-mono font-bold text-purple-300">
-                          {paymentId} {selectedPurchase.amount}
-                        </p>
-                        <button
-                          onClick={() => handleCopy(`${paymentId} ${selectedPurchase.amount}`, "desc")}
-                          className="text-white/40 hover:text-white p-1.5 rounded-lg bg-white/5"
-                        >
-                          {copiedField === "desc" ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
-                        </button>
-                      </div>
-                      <p className="text-[10px] text-white/40 mt-1">
-                        Таны ID: {paymentId} • Тасалбар: {selectedPurchase.amount}
-                      </p>
-                    </div>
-
-                    {/* Amount */}
-                    <div className="p-3 rounded-xl bg-white/5">
-                      <p className="text-[10px] text-white/30 mb-1">Шилжүүлэх дүн</p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-lg font-bold">{selectedPurchase.priceMNT.toLocaleString()}₮</p>
-                        <button
-                          onClick={() => handleCopy(String(selectedPurchase.priceMNT), "amount")}
-                          className="text-white/40 hover:text-white p-1.5 rounded-lg bg-white/5"
-                        >
-                          {copiedField === "amount" ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Submit */}
-                  <button
-                    onClick={handleSubmitPurchase}
-                    disabled={loading}
-                    className="w-full mt-4 bg-yellow-500 text-black font-bold text-sm py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {loading ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <>
-                        <Ticket size={16} />
-                        Шилжүүлэг хийсэн, хүсэлт илгээх
-                      </>
-                    )}
-                  </button>
-                  <p className="text-[10px] text-white/30 text-center mt-2">
-                    Шилжүүлэг хийсний дараа дарна уу. Админ шалгаад тасалбар олгоно.
-                  </p>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
+        <BankTransferModal
+          purchase={selectedPurchase}
+          paymentId={paymentId}
+          onClose={() => setSelectedPurchase(null)}
+          onSuccess={() => { setSelectedPurchase(null); router.refresh(); }}
+        />
       )}
     </MobileShell>
   );

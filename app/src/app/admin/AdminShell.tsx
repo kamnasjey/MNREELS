@@ -25,9 +25,14 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             MN<span className="text-purple-400">REELS</span>
             <span className="text-xs text-white/30 ml-2 font-normal">Admin</span>
           </Link>
-          <Link href="/" className="text-xs text-white/40 hover:text-white/60">
-            Сайт руу →
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/creator" className="text-xs text-green-400/70 hover:text-green-400 transition-colors">
+              Бүтээгч →
+            </Link>
+            <Link href="/series" className="text-xs text-purple-400/70 hover:text-purple-400 transition-colors">
+              Платформ →
+            </Link>
+          </div>
         </div>
         {/* Tab nav — scrollable on mobile */}
         <div className="max-w-6xl mx-auto px-3 sm:px-4 flex gap-1 overflow-x-auto hide-scrollbar pb-2">

@@ -14,9 +14,16 @@ export default async function SeriesDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  try {
   const { id } = await params;
 
-  const realData = await getSeriesWithEpisodes(id).catch(() => null);
+  const supabase = await createServerSupabase();
+
+  // Fetch series data and auth in PARALLEL (single client, no double creation)
+  const [realData, userResult] = await Promise.all([
+    getSeriesWithEpisodes(id, supabase).catch(() => null),
+    supabase.auth.getUser(),
+  ]);
   if (!realData) return notFound();
 
   const profile = realData.profiles as Record<string, unknown> | undefined;
@@ -25,23 +32,30 @@ export default async function SeriesDetailPage({
     id: String(ep.id),
     number: Number(ep.episode_number ?? i + 1),
     title: String(ep.title ?? `Анги ${i + 1}`),
-    duration: formatDuration(Number(ep.duration_seconds ?? 0)),
+    duration: formatDuration(Number(ep.duration ?? 0)),
     isFree: Boolean(ep.is_free) || i < Number(realData.free_episodes ?? 3),
     tasalbarCost: Number(ep.tasalbar_cost ?? 2),
     views: formatViews(Number(ep.view_count ?? 0)),
   }));
 
   let isFollowing = false;
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user && creatorId) {
-    const { data: follow } = await supabase
-      .from("follows")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("creator_id", creatorId)
-      .single();
-    isFollowing = !!follow;
+  let watchedEpisodeIds: string[] = [];
+  const user = userResult.data.user;
+  if (user) {
+    const episodeIds = episodes.map(e => e.id);
+
+    // Fetch follow status and watched episodes in parallel
+    const [followResult, watchResult] = await Promise.all([
+      creatorId
+        ? supabase.from("follows").select("id").eq("user_id", user.id).eq("creator_id", creatorId).single()
+        : Promise.resolve({ data: null }),
+      episodeIds.length > 0
+        ? supabase.from("watch_history").select("episode_id").eq("user_id", user.id).in("episode_id", episodeIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    isFollowing = !!followResult.data;
+    watchedEpisodeIds = (watchResult.data ?? []).map((w: { episode_id: string }) => String(w.episode_id));
   }
 
   return (
@@ -64,8 +78,13 @@ export default async function SeriesDetailPage({
       }}
       episodes={episodes}
       initialFollowing={isFollowing}
+      watchedEpisodeIds={watchedEpisodeIds}
     />
   );
+  } catch (err) {
+    console.error("SeriesDetailPage error:", err);
+    return notFound();
+  }
 }
 
 function formatViews(n: number): string {

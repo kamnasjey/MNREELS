@@ -1,3 +1,4 @@
+import { createServerSupabase } from "@/lib/supabase/server";
 import { getAllPublishedSeries, getContinueWatching } from "@/lib/actions/series";
 import HomeFeed from "@/components/HomeFeed";
 import DeviceGate from "@/components/DeviceGate";
@@ -14,10 +15,11 @@ const GRADIENTS = [
 const CATEGORIES = ["Бүгд", "Уран сайхан", "Романтик", "Комеди", "Аймшиг", "Адал явдал", "Гэмт хэрэг", "Түүх"];
 
 export default async function HomePage() {
-  // Single query for all series, derive trending/new from it
+  // Reuse a single Supabase client for all queries
+  const supabase = await createServerSupabase();
   const [allSeries, continueWatchingRaw] = await Promise.all([
-    getAllPublishedSeries().catch(() => []),
-    getContinueWatching().catch(() => []),
+    getAllPublishedSeries(supabase).catch(() => []),
+    getContinueWatching(supabase).catch(() => []),
   ]);
 
   const mapSeries = (list: Record<string, unknown>[]) =>
@@ -33,6 +35,7 @@ export default async function HomePage() {
       gradient: String(s.gradient ?? GRADIENTS[i % GRADIENTS.length]),
       freeEpisodes: Number(s.free_episodes ?? 3),
       coverUrl: s.cover_url ? String(s.cover_url) : undefined,
+      createdAt: s.created_at ? String(s.created_at) : undefined,
     }));
 
   const mapped = mapSeries(allSeries);

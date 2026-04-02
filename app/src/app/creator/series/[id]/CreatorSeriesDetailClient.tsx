@@ -1,10 +1,29 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ArrowLeft, Eye, Ticket, Users, Upload, Clock, Check, X, Film, Package, Loader2 } from "lucide-react";
+import { ArrowLeft, Eye, Ticket, Users, Upload, Clock, Check, X, Film, Package, Loader2, Trash2 } from "lucide-react";
 import CreatorShell from "@/components/CreatorShell";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { updateSeriesBundlePrice } from "@/lib/actions/series";
+
+async function apiDeleteSeries(seriesId: string) {
+  const res = await fetch("/api/series/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ seriesId }),
+  });
+  return res.json();
+}
+
+async function apiDeleteEpisode(episodeId: string) {
+  const res = await fetch("/api/series/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ episodeId }),
+  });
+  return res.json();
+}
 
 interface Episode {
   id: string;
@@ -41,7 +60,7 @@ const STATUS_BADGE: Record<string, { text: string; style: string }> = {
 
 export default function CreatorSeriesDetailClient({
   series,
-  episodes,
+  episodes: initialEpisodes,
   totalEarnings,
   totalViews,
   followCount,
@@ -52,6 +71,8 @@ export default function CreatorSeriesDetailClient({
   totalViews: number;
   followCount: number;
 }) {
+  const router = useRouter();
+  const [episodes, setEpisodes] = useState(initialEpisodes);
   const paidEpisodes = episodes.filter(e => !e.is_free);
   const totalIndividual = paidEpisodes.reduce((sum, ep) => sum + ep.tasalbar_cost, 0);
 
@@ -59,6 +80,12 @@ export default function CreatorSeriesDetailClient({
   const [bundleEnabled, setBundleEnabled] = useState(!!series.bundle_price);
   const [bundleSaving, setBundleSaving] = useState(false);
   const [bundleSaved, setBundleSaved] = useState(false);
+
+  // Delete state
+  const [showDeleteSeriesConfirm, setShowDeleteSeriesConfirm] = useState(false);
+  const [deletingSeriesId, setDeletingSeriesId] = useState(false);
+  const [deletingEpisodeId, setDeletingEpisodeId] = useState<string | null>(null);
+  const [showDeleteEpisodeConfirm, setShowDeleteEpisodeConfirm] = useState<string | null>(null);
 
   const handleSaveBundle = useCallback(async () => {
     setBundleSaving(true);
@@ -75,6 +102,41 @@ export default function CreatorSeriesDetailClient({
     }
   }, [series.id, bundleInput, bundleEnabled]);
 
+  const handleDeleteSeries = useCallback(async () => {
+    setDeletingSeriesId(true);
+    try {
+      const result = await apiDeleteSeries(series.id);
+      if (result.success) {
+        router.push("/creator");
+      } else {
+        alert(result.error || "Устгахад алдаа гарлаа");
+        setDeletingSeriesId(false);
+        setShowDeleteSeriesConfirm(false);
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Устгахад алдаа гарлаа");
+      setDeletingSeriesId(false);
+      setShowDeleteSeriesConfirm(false);
+    }
+  }, [series.id, router]);
+
+  const handleDeleteEpisode = useCallback(async (episodeId: string) => {
+    setDeletingEpisodeId(episodeId);
+    try {
+      const result = await apiDeleteEpisode(episodeId);
+      if (result.success) {
+        setEpisodes(prev => prev.filter(e => e.id !== episodeId));
+        setShowDeleteEpisodeConfirm(null);
+      } else {
+        alert(result.error || "Устгахад алдаа гарлаа");
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Устгахад алдаа гарлаа");
+    } finally {
+      setDeletingEpisodeId(null);
+    }
+  }, []);
+
   return (
     <CreatorShell>
       <div className="h-dvh w-full overflow-y-auto pb-20 hide-scrollbar">
@@ -85,10 +147,54 @@ export default function CreatorSeriesDetailClient({
               <ArrowLeft size={20} />
             </Link>
             <h1 className="font-bold text-base truncate max-w-[200px]">{series.title}</h1>
-            <Link href="/creator/upload" className="text-blue-400">
-              <Upload size={20} />
-            </Link>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowDeleteSeriesConfirm(true)}
+                className="text-red-400/60 hover:text-red-400 transition-colors"
+              >
+                <Trash2 size={18} />
+              </button>
+              <Link href="/creator/upload" className="text-blue-400">
+                <Upload size={20} />
+              </Link>
+            </div>
           </div>
+
+          {/* Delete Series Confirmation Modal */}
+          {showDeleteSeriesConfirm && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6">
+              <div className="bg-zinc-900 border border-white/10 rounded-2xl p-5 w-full max-w-sm">
+                <h3 className="text-base font-bold text-red-400 mb-2">Цуврал устгах</h3>
+                <p className="text-sm text-white/60 mb-1">
+                  <span className="font-semibold text-white">&ldquo;{series.title}&rdquo;</span> цувралыг устгахдаа итгэлтэй байна уу?
+                </p>
+                <p className="text-xs text-white/40 mb-4">
+                  Бүх ангиуд ({episodes.length}), үзэлтийн түүх, орлого бүгд устана. Энэ үйлдлийг буцаах боломжгүй.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowDeleteSeriesConfirm(false)}
+                    disabled={deletingSeriesId}
+                    className="flex-1 bg-white/10 text-white text-sm font-semibold py-2.5 rounded-xl"
+                  >
+                    Болих
+                  </button>
+                  <button
+                    onClick={handleDeleteSeries}
+                    disabled={deletingSeriesId}
+                    className="flex-1 bg-red-500 text-white text-sm font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2"
+                  >
+                    {deletingSeriesId ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Trash2 size={14} />
+                    )}
+                    {deletingSeriesId ? "Устгаж байна..." : "Устгах"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Cover */}
           {series.cover_url && (
@@ -244,7 +350,37 @@ export default function CreatorSeriesDetailClient({
                             )}
                           </div>
                         </div>
-                        <div className="flex-shrink-0">
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {/* Delete episode button */}
+                          {showDeleteEpisodeConfirm === ep.id ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleDeleteEpisode(ep.id)}
+                                disabled={deletingEpisodeId === ep.id}
+                                className="text-[10px] bg-red-500 text-white px-2 py-1 rounded-lg font-semibold"
+                              >
+                                {deletingEpisodeId === ep.id ? (
+                                  <Loader2 size={10} className="animate-spin" />
+                                ) : (
+                                  "Тийм"
+                                )}
+                              </button>
+                              <button
+                                onClick={() => setShowDeleteEpisodeConfirm(null)}
+                                className="text-[10px] bg-white/10 text-white px-2 py-1 rounded-lg"
+                              >
+                                Үгүй
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setShowDeleteEpisodeConfirm(ep.id)}
+                              className="text-white/20 hover:text-red-400 transition-colors p-1"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                          {/* Status icon */}
                           {ep.status === "published" ? (
                             <Check size={16} className="text-green-400" />
                           ) : ep.status === "rejected" ? (

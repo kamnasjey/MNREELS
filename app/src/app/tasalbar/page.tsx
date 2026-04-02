@@ -1,12 +1,13 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import TasalbarFeed from "@/components/TasalbarFeed";
+import { redirect } from "next/navigation";
 
 export default async function TasalbarPage() {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return <TasalbarFeed balance={0} transactions={[]} purchases={[]} isLoggedIn={false} paymentId={null} />;
+    redirect("/auth/login?next=/tasalbar");
   }
 
   const { data: profile } = await supabase

@@ -5,12 +5,30 @@ import { headers } from "next/headers";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const error = searchParams.get("error");
+  const errorDescription = searchParams.get("error_description");
   const next = searchParams.get("next") ?? "/";
+
+  // Handle OAuth errors (e.g., user denied access, provider error)
+  if (error) {
+    const errorMsg = errorDescription || error;
+    return NextResponse.redirect(
+      `${origin}/auth/login?error=${encodeURIComponent(errorMsg)}`
+    );
+  }
 
   if (code) {
     const supabase = await createServerSupabase();
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error && data.session) {
+    const { data, error: exchangeError } =
+      await supabase.auth.exchangeCodeForSession(code);
+
+    if (exchangeError) {
+      return NextResponse.redirect(
+        `${origin}/auth/login?error=${encodeURIComponent(exchangeError.message)}`
+      );
+    }
+
+    if (data.session) {
       // Update active_session_id for single-device enforcement
       const sessionId = data.session.access_token.slice(-16);
       await supabase
@@ -34,5 +52,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(`${origin}/auth/login`);
+  return NextResponse.redirect(`${origin}/auth/login?error=auth_failed`);
 }

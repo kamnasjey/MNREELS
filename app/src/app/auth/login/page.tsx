@@ -21,6 +21,7 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const kicked = searchParams.get("kicked");
+  const oauthError = searchParams.get("error");
 
   const supabase = createClient();
 
@@ -60,7 +61,7 @@ function LoginContent() {
           return;
         }
 
-        const { data, error: signUpError } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email: authEmail,
           password,
           options: {
@@ -72,7 +73,9 @@ function LoginContent() {
 
         if (signUpError) {
           if (signUpError.message.includes("already registered")) {
-            setError("Энэ хаяг аль хэдийн бүртгэлтэй байна");
+            setError("Энэ хаяг аль хэдийн бүртгэлтэй байна. Нэвтрэх хэсгээр орно уу.");
+          } else if (signUpError.message.includes("not authorized")) {
+            setError("Бүртгэл хаалттай байна. Админтай холбогдоно уу.");
           } else {
             setError(signUpError.message);
           }
@@ -80,13 +83,35 @@ function LoginContent() {
           return;
         }
 
-        // Update active session
-        if (data.session) {
-          await updateActiveSession(data.session.access_token.slice(-16));
+        // After signup, auto sign-in (handles cases where email confirmation is disabled)
+        const { data: signInData, error: autoSignInError } =
+          await supabase.auth.signInWithPassword({
+            email: authEmail,
+            password,
+          });
+
+        if (autoSignInError) {
+          if (autoSignInError.message.includes("Email not confirmed")) {
+            setError("Бүртгэл амжилттай. Имэйл баталгаажуулалт шаардлагатай.");
+          } else {
+            // Registration succeeded but auto-login failed - still treat as success
+            setError("Бүртгэл амжилттай. Нэвтрэх хэсгээр орно уу.");
+            setTab("login");
+          }
+          setLoading(false);
+          return;
         }
 
-        router.push("/");
-        router.refresh();
+        // Update active session (non-blocking - don't let it prevent redirect)
+        if (signInData.session) {
+          try {
+            await updateActiveSession(signInData.session.access_token.slice(-16));
+          } catch {}
+        }
+
+        // Desktop → /creator, Mobile → / (full reload to ensure cookies are sent)
+        const isMobile = /Mobile|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        window.location.href = isMobile ? "/" : "/creator";
       } else {
         // Login
         const { data, error: signInError } =
@@ -98,6 +123,10 @@ function LoginContent() {
         if (signInError) {
           if (signInError.message.includes("Invalid login")) {
             setError("Имэйл/утас эсвэл нууц үг буруу байна");
+          } else if (signInError.message.includes("Email not confirmed")) {
+            setError("Имэйл баталгаажуулалт хийгдээгүй байна");
+          } else if (signInError.message.includes("Invalid email")) {
+            setError("Имэйл хаяг буруу байна");
           } else {
             setError(signInError.message);
           }
@@ -105,13 +134,16 @@ function LoginContent() {
           return;
         }
 
-        // Update active session
+        // Update active session (non-blocking - don't let it prevent redirect)
         if (data.session) {
-          await updateActiveSession(data.session.access_token.slice(-16));
+          try {
+            await updateActiveSession(data.session.access_token.slice(-16));
+          } catch {}
         }
 
-        router.push("/");
-        router.refresh();
+        // Desktop → /creator, Mobile → / (full reload to ensure cookies are sent)
+        const isMobile = /Mobile|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        window.location.href = isMobile ? "/" : "/creator";
       }
     } catch {
       setError("Алдаа гарлаа. Дахин оролдоно уу.");
@@ -122,12 +154,25 @@ function LoginContent() {
 
   const signInWithGoogle = async () => {
     setGoogleLoading(true);
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    setError("");
+    try {
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            prompt: "select_account",
+          },
+        },
+      });
+      if (oauthError) {
+        setError("Google нэвтрэлт амжилтгүй: " + oauthError.message);
+        setGoogleLoading(false);
+      }
+    } catch {
+      setError("Google нэвтрэлт алдаа гарлаа. Дахин оролдоно уу.");
+      setGoogleLoading(false);
+    }
   };
 
   return (
@@ -155,6 +200,17 @@ function LoginContent() {
         <div className="w-full max-w-sm mb-4 p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-center">
           <p className="text-xs text-orange-400">
             Өөр төхөөрөмж дээр нэвтэрсэн тул гарлаа
+          </p>
+        </div>
+      )}
+
+      {/* OAuth error notice */}
+      {oauthError && !kicked && (
+        <div className="w-full max-w-sm mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-center">
+          <p className="text-xs text-red-400">
+            {oauthError === "auth_failed"
+              ? "Google нэвтрэлт амжилтгүй. Дахин оролдоно уу."
+              : `Алдаа: ${oauthError}`}
           </p>
         </div>
       )}

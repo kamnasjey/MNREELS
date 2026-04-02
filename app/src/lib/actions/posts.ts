@@ -2,8 +2,10 @@
 
 import { createServerSupabase } from "@/lib/supabase/server";
 
-export async function getFollowingFeed() {
-  const supabase = await createServerSupabase();
+type SupabaseServer = Awaited<ReturnType<typeof createServerSupabase>>;
+
+export async function getFollowingFeed(supabase?: SupabaseServer) {
+  if (!supabase) supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
 
@@ -48,8 +50,8 @@ export async function getFollowingFeed() {
   return posts ?? [];
 }
 
-export async function getCreatorPosts(creatorId: string) {
-  const supabase = await createServerSupabase();
+export async function getCreatorPosts(creatorId: string, supabase?: SupabaseServer) {
+  if (!supabase) supabase = await createServerSupabase();
 
   const { data: posts } = await supabase
     .from("posts")
@@ -79,8 +81,8 @@ export async function getCreatorPosts(creatorId: string) {
   return posts ?? [];
 }
 
-export async function createPost(imageUrl: string | null, caption: string) {
-  const supabase = await createServerSupabase();
+export async function createPost(imageUrl: string | null, caption: string, supabase?: SupabaseServer) {
+  if (!supabase) supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Нэвтрэх шаардлагатай");
 
@@ -107,8 +109,8 @@ export async function createPost(imageUrl: string | null, caption: string) {
   return data;
 }
 
-export async function deletePost(postId: string) {
-  const supabase = await createServerSupabase();
+export async function deletePost(postId: string, supabase?: SupabaseServer) {
+  if (!supabase) supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Нэвтрэх шаардлагатай");
 
@@ -121,8 +123,8 @@ export async function deletePost(postId: string) {
   return { success: true };
 }
 
-export async function getComments(postId: string) {
-  const supabase = await createServerSupabase();
+export async function getComments(postId: string, supabase?: SupabaseServer) {
+  if (!supabase) supabase = await createServerSupabase();
 
   const { data } = await supabase
     .from("comments")
@@ -134,8 +136,8 @@ export async function getComments(postId: string) {
   return data ?? [];
 }
 
-export async function addComment(postId: string, content: string) {
-  const supabase = await createServerSupabase();
+export async function addComment(postId: string, content: string, supabase?: SupabaseServer) {
+  if (!supabase) supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Нэвтрэх шаардлагатай");
 

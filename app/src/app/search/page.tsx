@@ -12,16 +12,12 @@ const GRADIENTS = [
 ];
 
 export default async function SearchPage() {
-  const allSeries = await getAllPublishedSeries();
+  // Reuse a single Supabase client; derive categories from fetched data
   const supabase = await createServerSupabase();
+  const allSeries = await getAllPublishedSeries(supabase);
 
-  // Dynamic categories from published series
-  const { data: catData } = await supabase
-    .from("series")
-    .select("category")
-    .eq("is_published", true);
-
-  const uniqueCategories = ["Бүгд", ...new Set((catData ?? []).map(c => c.category).filter(Boolean))];
+  // Derive categories from already-fetched series instead of a separate query
+  const uniqueCategories = ["Бүгд", ...new Set(allSeries.map((s: Record<string, unknown>) => s.category).filter(Boolean))] as string[];
 
   const seriesList = allSeries.map((s: Record<string, unknown>, i: number) => {
     const profile = s.profiles as Record<string, unknown> | undefined;

@@ -1,13 +1,14 @@
 import { createServerSupabase } from "@/lib/supabase/server";
-import { getFollowingFeed } from "@/lib/actions/posts";
+import { getFollowingFeed, getCreatorPosts } from "@/lib/actions/posts";
 import FollowingFeed from "@/components/FollowingFeed";
+import { redirect } from "next/navigation";
 
 export default async function FollowingPage() {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return <FollowingFeed posts={[]} isLoggedIn={false} isCreator={false} />;
+    redirect("/auth/login?next=/following");
   }
 
   const { data: profile } = await supabase
@@ -16,21 +17,36 @@ export default async function FollowingPage() {
     .eq("id", user.id)
     .single();
 
-  const rawPosts = await getFollowingFeed();
+  const isCreator = profile?.is_creator ?? false;
 
-  const posts = rawPosts.map((p: Record<string, unknown>) => {
-    const prof = p.profiles as Record<string, unknown> | undefined;
-    return {
-      id: String(p.id),
-      creatorId: String(p.creator_id ?? ""),
-      imageUrl: p.image_url ? String(p.image_url) : undefined,
-      caption: String(p.caption ?? ""),
-      createdAt: String(p.created_at),
-      creatorName: String(prof?.display_name ?? ""),
-      creatorAvatar: prof?.avatar_url ? String(prof.avatar_url) : undefined,
-      commentCount: Number(p.comment_count ?? 0),
-    };
-  });
+  const mapPosts = (rawPosts: Record<string, unknown>[]) =>
+    rawPosts.map((p) => {
+      const prof = p.profiles as Record<string, unknown> | undefined;
+      return {
+        id: String(p.id),
+        creatorId: String(p.creator_id ?? ""),
+        imageUrl: p.image_url ? String(p.image_url) : undefined,
+        caption: String(p.caption ?? ""),
+        createdAt: String(p.created_at),
+        creatorName: String(prof?.display_name ?? ""),
+        creatorAvatar: prof?.avatar_url ? String(prof.avatar_url) : undefined,
+        commentCount: Number(p.comment_count ?? 0),
+      };
+    });
 
-  return <FollowingFeed posts={posts} isLoggedIn={true} isCreator={profile?.is_creator ?? false} />;
+  // Fetch following posts and user's own posts in parallel, reusing single client
+  const [rawFollowing, rawMyPosts] = await Promise.all([
+    getFollowingFeed(supabase),
+    isCreator ? getCreatorPosts(user.id, supabase) : Promise.resolve([]),
+  ]);
+
+  return (
+    <FollowingFeed
+      posts={mapPosts(rawFollowing)}
+      myPosts={mapPosts(rawMyPosts as Record<string, unknown>[])}
+      isLoggedIn={true}
+      isCreator={isCreator}
+      currentUserId={user.id}
+    />
+  );
 }

@@ -14,6 +14,12 @@
     "R2_PUBLIC_URL": "https://pub-1f798cba797b457f8c51e162eb4ec9e7.r2.dev",
     "R2_ENDPOINT": "https://9edabd9e8c80db632e31be2c466c5092.r2.cloudflarestorage.com"
   },
+  "r2_buckets": [
+    {
+      "binding": "R2_BUCKET",
+      "bucket_name": "mnreels"
+    }
+  ],
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",

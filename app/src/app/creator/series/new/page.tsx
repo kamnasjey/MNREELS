@@ -20,8 +20,8 @@ export default function NewSeriesPage() {
   const handleCoverSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (f.size > 2 * 1024 * 1024) {
-      setError("Cover зураг 2MB-аас бага байх ёстой");
+    if (f.size > 10 * 1024 * 1024) {
+      setError("Cover зураг 10MB-аас бага байх ёстой");
       return;
     }
     setCoverFile(f);
@@ -39,27 +39,30 @@ export default function NewSeriesPage() {
 
       // Upload cover if selected
       if (coverFile) {
+        const formData = new FormData();
+        formData.append("file", coverFile);
+        formData.append("seriesId", "new");
+
         const res = await fetch("/api/upload/cover", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            filename: coverFile.name,
-            contentType: coverFile.type,
-            seriesId: "new",
-          }),
+          body: formData,
         });
 
-        if (!res.ok) throw new Error("Cover upload алдаа");
+        if (!res.ok) {
+          const text = await res.text();
+          console.error("Cover upload failed:", text.slice(0, 200));
+          throw new Error("Cover upload алдаа");
+        }
 
-        const { presignedUrl, publicUrl } = await res.json();
-
-        // Upload to R2
-        await fetch(presignedUrl, {
-          method: "PUT",
-          headers: { "Content-Type": coverFile.type },
-          body: coverFile,
-        });
-
+        const text = await res.text();
+        let parsed;
+        try {
+          parsed = JSON.parse(text);
+        } catch {
+          console.error("Cover upload non-JSON:", text.slice(0, 200));
+          throw new Error("Сервер алдаа гаргалаа");
+        }
+        const { publicUrl } = parsed;
         coverUrl = publicUrl;
       }
 
@@ -124,7 +127,7 @@ export default function NewSeriesPage() {
                   <>
                     <Image size={32} className="text-white/20" />
                     <p className="text-xs text-white/30">Зураг оруулах</p>
-                    <p className="text-[10px] text-white/20">16:9 хэмжээ, 2MB хүртэл</p>
+                    <p className="text-[10px] text-white/20">16:9 хэмжээ, 10MB хүртэл</p>
                   </>
                 )}
               </div>

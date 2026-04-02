@@ -1,7 +1,6 @@
 "use client";
 
 import { Smartphone, Film, Play, ArrowRight, Zap, Shield, TrendingUp } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
 
 const APP_URL = "https://mnreels.online";
 
@@ -56,18 +55,13 @@ export default function LandingPage() {
             {/* QR Code Card */}
             <div className="flex items-center gap-6">
               <div className="bg-white p-3 rounded-2xl shadow-2xl shadow-white/5">
-                <QRCodeSVG
-                  value={APP_URL}
-                  size={140}
-                  level="M"
-                  bgColor="#ffffff"
-                  fgColor="#000000"
-                  imageSettings={{
-                    src: "",
-                    height: 0,
-                    width: 0,
-                    excavate: false,
-                  }}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(APP_URL)}`}
+                  alt="QR Code"
+                  width={140}
+                  height={140}
+                  className="rounded-lg"
                 />
               </div>
               <div>
@@ -181,7 +175,7 @@ export default function LandingPage() {
               step: "02",
               icon: Zap,
               title: "Тасалбар авах",
-              desc: "QPay-ээр тасалбар худалдаж аваад дуртай контентоо нээнэ",
+              desc: "Банкны шилжүүлгээр тасалбар худалдаж аваад дуртай контентоо нээнэ",
               gradient: "from-yellow-500/10 to-yellow-500/5",
             },
             {
@@ -275,12 +269,13 @@ export default function LandingPage() {
               </p>
               <div className="flex justify-center items-center gap-8">
                 <div className="bg-white p-4 rounded-2xl">
-                  <QRCodeSVG
-                    value={APP_URL}
-                    size={160}
-                    level="M"
-                    bgColor="#ffffff"
-                    fgColor="#000000"
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(APP_URL)}`}
+                    alt="QR Code"
+                    width={160}
+                    height={160}
+                    className="rounded-lg"
                   />
                 </div>
                 <div className="text-left">

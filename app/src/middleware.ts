@@ -1,20 +1,25 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Public routes that don't require authentication
-const publicRoutes = ["/auth", "/terms", "/landing"];
+// Public routes — pages handle their own auth
+const publicRoutes = ["/auth", "/terms", "/landing", "/watch", "/series", "/profile", "/tasalbar", "/following", "/search"];
 
-// Routes allowed on desktop (creator content management only)
-const desktopAllowedPrefixes = ["/creator", "/admin", "/auth", "/terms", "/landing", "/api"];
+// Desktop allowed routes
+const desktopAllowedPrefixes = ["/creator", "/admin", "/auth", "/terms", "/landing", "/api", "/watch", "/series", "/profile", "/tasalbar", "/following", "/search"];
 
 function isMobileUA(ua: string): boolean {
   return /Mobile|Android|iPhone|iPad|iPod|webOS|BlackBerry|Opera Mini|IEMobile/i.test(ua);
 }
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
+  const path = request.nextUrl.pathname;
+
+  // Skip middleware for static assets and API routes
+  if (path.startsWith("/api/") || path.startsWith("/_next/")) {
+    return NextResponse.next({ request });
+  }
+
+  let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,9 +33,7 @@ export async function middleware(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
-          supabaseResponse = NextResponse.next({
-            request,
-          });
+          supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           );
@@ -39,25 +42,37 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const path = request.nextUrl.pathname;
   const ua = request.headers.get("user-agent") ?? "";
+  const isPublic = path === "/" || publicRoutes.some((route) => path.startsWith(route));
 
-  // Desktop restriction: only allow creator/admin/auth routes
-  if (!isMobileUA(ua) && !desktopAllowedPrefixes.some(p => path.startsWith(p))) {
-    // Desktop trying to access mobile-only routes → redirect to landing
+  // Desktop restriction (skip on localhost for dev testing)
+  const host = request.headers.get("host") ?? "";
+  const isLocalhost = host.startsWith("localhost") || host.startsWith("127.0.0.1");
+  if (!isLocalhost && !isMobileUA(ua) && !desktopAllowedPrefixes.some(p => path.startsWith(p))) {
     const url = request.nextUrl.clone();
     url.pathname = "/landing";
     return NextResponse.redirect(url);
   }
 
-  // Allow public routes without auth
-  const isPublic = publicRoutes.some((route) => path.startsWith(route));
+  // For public routes: use fast getSession() (local cookie read, no network call)
+  // For protected routes: use getUser() (validates with Supabase server, refreshes token)
+  let user = null;
+  if (isPublic) {
+    const { data: { session } } = await supabase.auth.getSession();
+    user = session?.user ?? null;
+  } else {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  }
 
-  // Redirect unauthenticated users to login (except public routes)
+  // Logged-in user on login page → redirect home
+  if (user && path.startsWith("/auth/login")) {
+    const url = request.nextUrl.clone();
+    url.pathname = isMobileUA(ua) ? "/" : "/creator";
+    return NextResponse.redirect(url);
+  }
+
+  // Unauthenticated on protected route → redirect to login
   if (!isPublic && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
@@ -67,29 +82,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Session enforcement: check active_session_id
-  if (user && !isPublic) {
-    const { data: session } = await supabase.auth.getSession();
-    if (session?.session) {
-      const currentSessionId = session.session.access_token.slice(-16);
+  // Admin route protection
+  if (user && path.startsWith("/admin")) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single();
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("active_session_id")
-        .eq("id", user.id)
-        .single();
-
-      if (
-        profile?.active_session_id &&
-        profile.active_session_id !== currentSessionId
-      ) {
-        // Another device logged in — force logout
-        await supabase.auth.signOut();
-        const url = request.nextUrl.clone();
-        url.pathname = "/auth/login";
-        url.searchParams.set("kicked", "true");
-        return NextResponse.redirect(url);
-      }
+    if (!profile?.is_admin) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/";
+      return NextResponse.redirect(url);
     }
   }
 
