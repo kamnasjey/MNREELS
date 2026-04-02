@@ -18,6 +18,10 @@ export type Database = {
           bank_name: string | null;
           bank_account: string | null;
           tasalbar_balance: number;
+          payment_id: number | null;
+          login_streak: number;
+          last_login_date: string | null;
+          last_seen_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -34,6 +38,10 @@ export type Database = {
           bank_name?: string | null;
           bank_account?: string | null;
           tasalbar_balance?: number;
+          payment_id?: number | null;
+          login_streak?: number;
+          last_login_date?: string | null;
+          last_seen_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
         Relationships: [];
@@ -51,6 +59,7 @@ export type Database = {
           is_published: boolean;
           total_views: number;
           rating: number;
+          bundle_price: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -64,6 +73,7 @@ export type Database = {
           age_rating?: string;
           free_episodes?: number;
           is_published?: boolean;
+          bundle_price?: number | null;
         };
         Update: Partial<Database["public"]["Tables"]["series"]["Insert"]>;
         Relationships: [];
@@ -139,12 +149,16 @@ export type Database = {
           user_id: string;
           episode_id: string;
           tasalbar_spent: number;
+          expires_at: string;
+          is_bundle: boolean;
           created_at: string;
         };
         Insert: {
           user_id: string;
           episode_id: string;
           tasalbar_spent: number;
+          expires_at: string;
+          is_bundle?: boolean;
         };
         Update: never;
         Relationships: [];
@@ -216,6 +230,34 @@ export type Database = {
           tugrug_amount: number;
           bank_name: string;
           bank_account: string;
+        };
+        Update: {
+          status?: string;
+          processed_at?: string;
+        };
+        Relationships: [];
+      };
+      tasalbar_purchases: {
+        Row: {
+          id: string;
+          user_id: string;
+          payment_id: number | null;
+          package_id: string;
+          tasalbar_amount: number;
+          tugrug_amount: number;
+          transfer_description: string | null;
+          status: "pending" | "approved" | "rejected";
+          created_at: string;
+          processed_at: string | null;
+        };
+        Insert: {
+          user_id: string;
+          payment_id?: number | null;
+          package_id: string;
+          tasalbar_amount: number;
+          tugrug_amount: number;
+          transfer_description?: string | null;
+          status?: string;
         };
         Update: {
           status?: string;

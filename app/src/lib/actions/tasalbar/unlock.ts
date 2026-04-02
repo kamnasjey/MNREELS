@@ -2,6 +2,11 @@
 
 import { createServerSupabase } from "@/lib/supabase/server";
 import { safeIncrementBalance } from "./helpers";
+import {
+  CREATOR_SHARE_PERCENT,
+  EPISODE_ACCESS_MS,
+  BUNDLE_ACCESS_MS,
+} from "@/lib/constants/packages";
 
 // Unlock single episode — 48 hours access
 export async function unlockEpisode(episodeId: string) {
@@ -30,25 +35,41 @@ export async function unlockEpisode(episodeId: string) {
 
   if (existing && existing.length > 0) return { success: true, alreadyPurchased: true };
 
-  // Check balance
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("tasalbar_balance")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile || profile.tasalbar_balance < episode.tasalbar_cost) {
-    return { success: false, error: "Тасалбар хүрэхгүй байна", needTasalbar: true };
-  }
-
   const cost = episode.tasalbar_cost;
-  const creatorShare = parseFloat((cost * 0.80).toFixed(2));
+  const creatorShare = Math.floor(cost * CREATOR_SHARE_PERCENT);
   const platformShare = cost - creatorShare;
-  const creatorId = (episode.series as any).creator_id;
-  const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(); // 48 hours
+  const creatorId = (episode.series as Record<string, unknown>).creator_id as string;
+  const expiresAt = new Date(Date.now() + EPISODE_ACCESS_MS).toISOString();
 
-  // Deduct from buyer
-  await safeIncrementBalance(supabase, user.id, -cost);
+  // Atomic balance deduction via RPC — returns false if insufficient balance
+  // This prevents race condition double-spending
+  const { error: rpcError } = await supabase.rpc("increment_balance", {
+    user_id: user.id,
+    amount: -cost,
+  });
+
+  if (rpcError) {
+    // Fallback: check + deduct (less safe but functional)
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("tasalbar_balance")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile || profile.tasalbar_balance < cost) {
+      return { success: false, error: "Тасалбар хүрэхгүй байна", needTasalbar: true };
+    }
+
+    const { error: updateErr } = await supabase
+      .from("profiles")
+      .update({ tasalbar_balance: profile.tasalbar_balance - cost })
+      .eq("id", user.id)
+      .gte("tasalbar_balance", cost); // DB-level check: balance >= cost
+
+    if (updateErr) {
+      return { success: false, error: "Тасалбар хүрэхгүй байна", needTasalbar: true };
+    }
+  }
 
   // Record purchase with expiry (critical — determines access)
   const { error: purchaseError } = await supabase.from("purchases").insert({
@@ -60,7 +81,7 @@ export async function unlockEpisode(episodeId: string) {
   });
 
   if (purchaseError) {
-    // Refund if purchase record failed
+    // Refund
     await safeIncrementBalance(supabase, user.id, cost);
     return { success: false, error: "Худалдан авалт бүртгэхэд алдаа" };
   }
@@ -107,7 +128,6 @@ export async function unlockSeriesBundle(seriesId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Нэвтрэх шаардлагатай" };
 
-  // Get series with bundle_price and creator
   const { data: series } = await supabase
     .from("series")
     .select("id, bundle_price, creator_id")
@@ -117,7 +137,6 @@ export async function unlockSeriesBundle(seriesId: string) {
   if (!series) return { success: false, error: "Цуврал олдсонгүй" };
   if (!series.bundle_price) return { success: false, error: "Энэ цувралд багц үнэ байхгүй" };
 
-  // Get all paid episodes in this series
   const { data: episodes } = await supabase
     .from("episodes")
     .select("id, tasalbar_cost, is_free")
@@ -127,7 +146,6 @@ export async function unlockSeriesBundle(seriesId: string) {
 
   if (!episodes || episodes.length === 0) return { success: false, error: "Төлбөртэй анги байхгүй" };
 
-  // Check which episodes user already has active purchase for
   const { data: activePurchases } = await supabase
     .from("purchases")
     .select("episode_id")
@@ -141,30 +159,46 @@ export async function unlockSeriesBundle(seriesId: string) {
   if (episodesToUnlock.length === 0) return { success: true, alreadyPurchased: true };
 
   const bundleCost = series.bundle_price;
+  const creatorShare = Math.floor(bundleCost * CREATOR_SHARE_PERCENT);
+  const platformShare = bundleCost - creatorShare;
+  const expiresAt = new Date(Date.now() + BUNDLE_ACCESS_MS).toISOString();
 
-  // Check balance
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("tasalbar_balance")
-    .eq("id", user.id)
-    .single();
+  // Atomic balance deduction
+  const { error: rpcError } = await supabase.rpc("increment_balance", {
+    user_id: user.id,
+    amount: -bundleCost,
+  });
 
-  if (!profile || profile.tasalbar_balance < bundleCost) {
-    return { success: false, error: "Тасалбар хүрэхгүй байна", needTasalbar: true };
+  if (rpcError) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("tasalbar_balance")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile || profile.tasalbar_balance < bundleCost) {
+      return { success: false, error: "Тасалбар хүрэхгүй байна", needTasalbar: true };
+    }
+
+    const { error: updateErr } = await supabase
+      .from("profiles")
+      .update({ tasalbar_balance: profile.tasalbar_balance - bundleCost })
+      .eq("id", user.id)
+      .gte("tasalbar_balance", bundleCost);
+
+    if (updateErr) {
+      return { success: false, error: "Тасалбар хүрэхгүй байна", needTasalbar: true };
+    }
   }
 
-  const creatorShare = parseFloat((bundleCost * 0.80).toFixed(2));
-  const platformShare = bundleCost - creatorShare;
-  const expiresAt = new Date(Date.now() + 96 * 60 * 60 * 1000).toISOString(); // 96 hours
+  // Per-episode cost — distribute evenly, remainder goes to first episode
+  const perEpisodeCost = Math.floor(bundleCost / episodesToUnlock.length);
+  const remainder = bundleCost - perEpisodeCost * episodesToUnlock.length;
 
-  // Deduct from buyer
-  await safeIncrementBalance(supabase, user.id, -bundleCost);
-
-  // Insert purchases for all episodes
-  const purchaseRows = episodesToUnlock.map(ep => ({
+  const purchaseRows = episodesToUnlock.map((ep, i) => ({
     user_id: user.id,
     episode_id: ep.id,
-    tasalbar_spent: Math.round(bundleCost / episodesToUnlock.length),
+    tasalbar_spent: perEpisodeCost + (i === 0 ? remainder : 0),
     expires_at: expiresAt,
     is_bundle: true,
   }));
@@ -179,10 +213,14 @@ export async function unlockSeriesBundle(seriesId: string) {
     }),
   ]);
 
+  // Creator earnings — bundle-д episode_id-г эхний ангиар бүртгэнэ
+  const firstEpisodeId = episodesToUnlock[0].id;
+
   await Promise.all([
     safeIncrementBalance(supabase, series.creator_id, creatorShare),
     supabase.from("creator_earnings").insert({
       creator_id: series.creator_id,
+      episode_id: firstEpisodeId,
       buyer_id: user.id,
       total_tasalbar: bundleCost,
       creator_share: creatorShare,

@@ -98,7 +98,27 @@
       "Bash(curl -s -o /dev/null -w \"First byte: %{time_starttransfer}s | Total: %{time_total}s | Status: %{http_code}\\\\n\" https://mnreels.online/auth/login)",
       "Bash(curl -s -o /dev/null -w \"First byte: %{time_starttransfer}s | Total: %{time_total}s | Status: %{http_code}\\\\n\" -L https://mnreels.online/terms)",
       "Bash(curl -s -o /dev/null -w \"First byte: %{time_starttransfer}s | Total: %{time_total}s | Status: %{http_code}\\\\n\" -H \"User-Agent: Mozilla/5.0 \\(iPhone; CPU iPhone OS 17_0 like Mac OS X\\)\" -L https://mnreels.online/)",
-      "Bash(curl -s -o /dev/null -w \"First byte: %{time_starttransfer}s | Total: %{time_total}s | Status: %{http_code}\\\\n\" -H \"User-Agent: Mozilla/5.0 \\(iPhone; CPU iPhone OS 17_0 like Mac OS X\\)\" -L https://mnreels.online/search)"
+      "Bash(curl -s -o /dev/null -w \"First byte: %{time_starttransfer}s | Total: %{time_total}s | Status: %{http_code}\\\\n\" -H \"User-Agent: Mozilla/5.0 \\(iPhone; CPU iPhone OS 17_0 like Mac OS X\\)\" -L https://mnreels.online/search)",
+      "Bash(curl -s -o /dev/null -w \"TTFB: %{time_starttransfer}s | Total: %{time_total}s\\\\n\" -H \"User-Agent: Mozilla/5.0 \\(iPhone\\)\" -L https://mnreels.online/)",
+      "Bash(curl -s -o /dev/null -w \"TTFB: %{time_starttransfer}s | Total: %{time_total}s\\\\n\" -H \"User-Agent: Mozilla/5.0 \\(iPhone\\)\" -L https://mnreels.online/search)",
+      "Bash(curl -s -o /dev/null -w \"TTFB: %{time_starttransfer}s | Total: %{time_total}s\\\\n\" -L https://mnreels.online/landing)",
+      "Bash(curl -s -o /dev/null -w \"TTFB: %{time_starttransfer}s | Total: %{time_total}s\\\\n\" -L https://mnreels.online/auth/login)",
+      "Bash(curl -s -o /dev/null -w \"TTFB:%{time_starttransfer}s Total:%{time_total}s Status:%{http_code}\\\\n\" -X POST -H \"Content-Type: application/json\" -d '{\"action\":\"start\"}' https://mnreels.online/api/upload)",
+      "Bash(curl -s -o /dev/null -w \"TTFB:%{time_starttransfer}s Total:%{time_total}s Status:%{http_code}\\\\n\" -X POST -H \"Content-Type: application/octet-stream\" https://mnreels.online/api/upload/part)",
+      "Bash(curl -s -o /dev/null -w \"TTFB:%{time_starttransfer}s Total:%{time_total}s Status:%{http_code}\\\\n\" -X POST https://mnreels.online/api/upload/avatar)",
+      "Bash(curl -s -o /dev/null -w \"TTFB:%{time_starttransfer}s Total:%{time_total}s Status:%{http_code}\\\\n\" https://mnreels.online/api/video/test.mp4)",
+      "Bash(curl -s -o /dev/null -w \"TTFB:%{time_starttransfer}s Total:%{time_total}s Status:%{http_code}\\\\n\" https://mnreels.online/api/creator/series)",
+      "Bash(curl -s -o /dev/null -w \"TTFB:%{time_starttransfer}s Total:%{time_total}s Status:%{http_code}\\\\n\" -I \"https://pub-1f798cba797b457f8c51e162eb4ec9e7.r2.dev/\")",
+      "Bash(curl -sI https://mnreels.online/landing)",
+      "Bash(curl -sI https://mnreels.online/terms)",
+      "Bash(curl -sI -H \"User-Agent: Mozilla/5.0 \\(iPhone\\)\" https://mnreels.online/)",
+      "Bash(curl -sI -H \"User-Agent: Mozilla/5.0 \\(iPhone\\)\" https://mnreels.online/creator/upload)",
+      "Bash(curl -s https://mnreels.online/api/upload -X POST -H \"Content-Type: application/json\" -d '{\"action\":\"start\",\"seriesId\":\"test\",\"title\":\"test\"}')",
+      "Bash(curl -s https://mnreels.online/api/upload/part -X POST -H \"Content-Type: application/octet-stream\")",
+      "Bash(curl -s -o /dev/null -w \"R2 CDN: TTFB:%{time_starttransfer}s Status:%{http_code}\\\\n\" https://pub-1f798cba797b457f8c51e162eb4ec9e7.r2.dev/)",
+      "Bash(curl -sI https://mnreels.online/)",
+      "Bash(curl -sI -H \"User-Agent: Mozilla/5.0 \\(iPhone\\)\" -L https://mnreels.online/creator/upload)",
+      "Read(//tmp/**)"
     ]
   }
 }

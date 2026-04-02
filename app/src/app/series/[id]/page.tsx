@@ -35,7 +35,7 @@ export default async function SeriesDetailPage({
     duration: formatDuration(Number(ep.duration ?? 0)),
     isFree: Boolean(ep.is_free) || i < Number(realData.free_episodes ?? 3),
     tasalbarCost: Number(ep.tasalbar_cost ?? 2),
-    views: formatViews(Number(ep.view_count ?? 0)),
+    views: formatViews(Number(ep.views ?? 0)),
   }));
 
   let isFollowing = false;
