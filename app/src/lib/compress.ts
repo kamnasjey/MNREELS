@@ -52,12 +52,6 @@ export async function compressVideo(
     timeoutMs = 15 * 60 * 1000,
   } = options;
 
-  // 20MB-аас жижиг файл compress хийх шаардлагагүй — шууд буцаана
-  if (file.size < 20 * 1024 * 1024) {
-    onProgress?.(100);
-    return file;
-  }
-
   onProgress?.(1);
 
   const ff = await getFFmpeg(onLog);
