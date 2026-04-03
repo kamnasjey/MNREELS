@@ -2,6 +2,7 @@
 
 import { Smartphone, Film, Play, ArrowRight, Zap, Shield, TrendingUp } from "lucide-react";
 
+
 const APP_URL = "https://mnreels.online";
 
 export default function LandingPage() {

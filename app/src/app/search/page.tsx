@@ -2,6 +2,9 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { getAllPublishedSeries } from "@/lib/actions/series";
 import SearchFeed from "@/components/SearchFeed";
 
+// Revalidate every 10 minutes
+export const revalidate = 600;
+
 const GRADIENTS = [
   "from-purple-800 to-indigo-900",
   "from-cyan-800 to-teal-900",

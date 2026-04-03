@@ -3,6 +3,9 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import SeriesDetail from "@/components/SeriesDetail";
 import { notFound } from "next/navigation";
 
+// Revalidate every 30 minutes — series data doesn't change frequently
+export const revalidate = 1800;
+
 const GRADIENTS = [
   "from-purple-800 to-indigo-900",
   "from-cyan-800 to-teal-900",

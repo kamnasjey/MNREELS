@@ -3,6 +3,9 @@ import { getAllPublishedSeries, getContinueWatching } from "@/lib/actions/series
 import HomeFeed from "@/components/HomeFeed";
 import DeviceGate from "@/components/DeviceGate";
 
+// Revalidate home page every 5 minutes — serves cached version, regenerates in background
+export const revalidate = 300;
+
 const GRADIENTS = [
   "from-purple-800 to-indigo-900",
   "from-cyan-800 to-teal-900",

@@ -33,7 +33,18 @@ export default function RootLayout({
     <html lang="mn">
       <body className="bg-black text-white">
         {children}
+        <ServiceWorkerInit />
       </body>
     </html>
+  );
+}
+
+function ServiceWorkerInit() {
+  return (
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))`,
+      }}
+    />
   );
 }

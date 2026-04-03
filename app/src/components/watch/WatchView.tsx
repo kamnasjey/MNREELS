@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useRef, useEffect, useState } from "react";
+import { useCallback, useRef, useEffect, useState, useMemo } from "react";
 import { ArrowLeft, Loader2, Unlock } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import VideoPlayer from "@/components/VideoPlayer";
 import { saveWatchProgress } from "@/lib/actions/series";
 import { unlockEpisode } from "@/lib/actions/tasalbar";
+import { useVideoPrefetch } from "@/lib/hooks/useVideoPrefetch";
 
 interface EpisodeData {
   id: string;
@@ -39,6 +40,15 @@ export default function WatchView({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(startIndex);
   const [episodes, setEpisodes] = useState(initialEpisodes);
+
+  // Prefetch next 2 videos in background for instant playback
+  const prefetchUrls = useMemo(() => {
+    return episodes
+      .slice(activeIndex + 1, activeIndex + 3)
+      .map(ep => ep.videoUrl)
+      .filter(Boolean);
+  }, [episodes, activeIndex]);
+  useVideoPrefetch(prefetchUrls);
 
   // Scroll to startIndex on mount
   useEffect(() => {

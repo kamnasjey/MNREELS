@@ -118,7 +118,11 @@
       "Bash(curl -s -o /dev/null -w \"R2 CDN: TTFB:%{time_starttransfer}s Status:%{http_code}\\\\n\" https://pub-1f798cba797b457f8c51e162eb4ec9e7.r2.dev/)",
       "Bash(curl -sI https://mnreels.online/)",
       "Bash(curl -sI -H \"User-Agent: Mozilla/5.0 \\(iPhone\\)\" -L https://mnreels.online/creator/upload)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(find . -name \"*.ts\" -o -name \"*.tsx\" -exec cat {} +)",
+      "Bash(curl -s -o /dev/null -w \"%{time_starttransfer}\" -H \"User-Agent: Mozilla/5.0 \\(iPhone\\)\" -L https://mnreels.online/)",
+      "Bash(curl -s -o /dev/null -w \"%{time_starttransfer}\" -L https://www.tiktok.com/)",
+      "Bash(curl -s -o /dev/null -w \"%{time_starttransfer}\" -L https://m.youtube.com/)"
     ]
   }
 }
