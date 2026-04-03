@@ -27,7 +27,8 @@ interface EpisodeEntry {
   compressedSize?: number;
 }
 
-const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB per chunk (smaller = less Worker memory)
+const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB per chunk (2x том = 2x бага HTTP request)
+const PARALLEL_UPLOADS = 3; // 3 chunk зэрэг upload
 
 async function safeJson(res: Response): Promise<Record<string, unknown>> {
   // Timeout: 30s to prevent hanging on slow/broken response streams
@@ -216,26 +217,19 @@ export default function UploadPage() {
         r2Key: string;
       };
 
-      // UPLOAD PARTS (with retry)
+      // UPLOAD PARTS — parallel (3 зэрэг, retry бүхий)
       const totalChunks = Math.ceil(entry.file.size / CHUNK_SIZE);
-      const parts: { partNumber: number; etag: string }[] = [];
+      const parts: { partNumber: number; etag: string }[] = new Array(totalChunks);
+      let completedChunks = 0;
 
-      for (let i = 0; i < totalChunks; i++) {
+      // Single chunk upload with retry
+      const uploadChunk = async (i: number) => {
         const start = i * CHUNK_SIZE;
         const end = Math.min(start + CHUNK_SIZE, entry.file.size);
         const chunk = entry.file.slice(start, end);
 
-        updateEpisode(entry.id, {
-          progress: Math.round((i / totalChunks) * 95),
-        });
-
-        let partResult: { partNumber: number; etag: string } | null = null;
-        let lastErr = "";
-
-        // Retry up to 3 times per chunk
         for (let attempt = 0; attempt < 3; attempt++) {
           try {
-            // Send raw binary with metadata in headers (no FormData = less memory on Worker)
             const partRes = await fetch("/api/upload/part", {
               method: "POST",
               headers: {
@@ -249,35 +243,30 @@ export default function UploadPage() {
 
             if (!partRes.ok) {
               const err = await safeJson(partRes);
-              lastErr = (err.error as string) || `Хэсэг ${i + 1} алдаа`;
-              if (attempt < 2) {
-                await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
-                continue;
-              }
-              throw new Error(lastErr);
+              if (attempt < 2) { await new Promise(r => setTimeout(r, 1000 * (attempt + 1))); continue; }
+              throw new Error((err.error as string) || `Хэсэг ${i + 1} алдаа`);
             }
 
-            partResult = (await safeJson(partRes)) as {
-              partNumber: number;
-              etag: string;
-            };
-            break;
+            const result = (await safeJson(partRes)) as { partNumber: number; etag: string };
+            parts[i] = result;
+            completedChunks++;
+            updateEpisode(entry.id, { progress: Math.round((completedChunks / totalChunks) * 95) });
+            return;
           } catch (fetchErr) {
-            lastErr = fetchErr instanceof Error ? fetchErr.message : "Сүлжээний алдаа";
-            if (attempt < 2) {
-              await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
-              continue;
-            }
-            throw new Error(`Хэсэг ${i + 1}: ${lastErr}`);
+            if (attempt < 2) { await new Promise(r => setTimeout(r, 1000 * (attempt + 1))); continue; }
+            throw new Error(`Хэсэг ${i + 1}: ${fetchErr instanceof Error ? fetchErr.message : "Алдаа"}`);
           }
         }
+      };
 
-        if (partResult) parts.push(partResult);
-
-        // Small delay between chunks to let Worker memory recover
-        if (i < totalChunks - 1) {
-          await new Promise((r) => setTimeout(r, 150));
+      // Upload in parallel batches of PARALLEL_UPLOADS
+      for (let batch = 0; batch < totalChunks; batch += PARALLEL_UPLOADS) {
+        const batchEnd = Math.min(batch + PARALLEL_UPLOADS, totalChunks);
+        const batchPromises = [];
+        for (let i = batch; i < batchEnd; i++) {
+          batchPromises.push(uploadChunk(i));
         }
+        await Promise.all(batchPromises);
       }
 
       // COMPLETE (with retry — R2 can be slow to finalize large files)

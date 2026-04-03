@@ -48,9 +48,15 @@ export async function compressVideo(
     onProgress,
     onLog,
     maxHeight = 720,
-    crf = 28,
-    timeoutMs = 10 * 60 * 1000, // 10 minutes default
+    crf = 30,                       // 28 → 30 (хурдан encode, бага зэрэг жижиг файл)
+    timeoutMs = 15 * 60 * 1000,
   } = options;
+
+  // 20MB-аас жижиг файл compress хийх шаардлагагүй — шууд буцаана
+  if (file.size < 20 * 1024 * 1024) {
+    onProgress?.(100);
+    return file;
+  }
 
   onProgress?.(1);
 
@@ -77,10 +83,12 @@ export async function compressVideo(
     "-i", inputName,
     "-vf", `scale=-2:${maxHeight}`,
     "-c:v", "libx264",
-    "-preset", "fast",
+    "-preset", "ultrafast",  // ultrafast = 3-5x хурдан (fast-аас)
     "-crf", String(crf),
+    "-tune", "fastdecode",   // decode хурдан болгоно
     "-c:a", "aac",
-    "-b:a", "96k",
+    "-b:a", "64k",           // 96k → 64k (audio жижиг, хурдан)
+    "-ac", "1",              // stereo → mono (2x жижиг audio)
     "-movflags", "+faststart",
     "-y",
     outputName,
