@@ -9,10 +9,11 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/creator/:path*",
+        // COOP/COEP зөвхөн upload хуудаст — FFmpeg.wasm SharedArrayBuffer шаардана
+        source: "/creator/upload",
         headers: [
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
-          { key: "Cross-Origin-Embedder-Policy", value: "require-corp" },
+          { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
         ],
       },
       // Static assets — 1 жил cache
