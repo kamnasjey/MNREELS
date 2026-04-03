@@ -122,7 +122,8 @@
       "Bash(find . -name \"*.ts\" -o -name \"*.tsx\" -exec cat {} +)",
       "Bash(curl -s -o /dev/null -w \"%{time_starttransfer}\" -H \"User-Agent: Mozilla/5.0 \\(iPhone\\)\" -L https://mnreels.online/)",
       "Bash(curl -s -o /dev/null -w \"%{time_starttransfer}\" -L https://www.tiktok.com/)",
-      "Bash(curl -s -o /dev/null -w \"%{time_starttransfer}\" -L https://m.youtube.com/)"
+      "Bash(curl -s -o /dev/null -w \"%{time_starttransfer}\" -L https://m.youtube.com/)",
+      "Bash(curl -sI https://mnreels.online/creator/upload)"
     ]
   }
 }

@@ -97,6 +97,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // COOP/COEP headers for /creator/upload — FFmpeg.wasm SharedArrayBuffer шаардана
+  if (path === "/creator/upload") {
+    supabaseResponse.headers.set("Cross-Origin-Opener-Policy", "same-origin");
+    supabaseResponse.headers.set("Cross-Origin-Embedder-Policy", "credentialless");
+  }
+
   return supabaseResponse;
 }
 
