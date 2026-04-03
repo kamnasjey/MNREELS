@@ -13,8 +13,9 @@ async function getFFmpeg(onLog?: (msg: string) => void): Promise<FFmpeg> {
     ffmpeg.on("log", ({ message }) => onLog(message));
   }
 
-  // Load from CDN
-  const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm";
+  // Load from CDN — single-threaded (umd) version that works WITHOUT SharedArrayBuffer
+  // This works on all browsers regardless of COOP/COEP headers
+  const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
   await ffmpeg.load({
     coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
     wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
@@ -140,9 +141,9 @@ function getExtension(filename: string): string {
   return ".mp4";
 }
 
-// Check if browser supports SharedArrayBuffer (required for FFmpeg.wasm multi-threaded)
+// Check if browser supports WebAssembly (required for FFmpeg.wasm)
 export function isCompressionSupported(): boolean {
-  return typeof SharedArrayBuffer !== "undefined";
+  return typeof WebAssembly !== "undefined";
 }
 
 // Format file size for display
